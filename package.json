@@ -4,7 +4,6 @@
   "description": "Highly customizable, but simple to use, sanitization of objects and primitives.",
   "main": "./app/dist/esm/saniObj.mjs",
   "types": "./app/dist/esm/saniObj.d.ts",
-  "bin": "./app/dist/esm/cli/saniObj-cli.js",
   "exports": {
     "node": {
       "import": "./app/dist/esm/saniObj.mjs",
