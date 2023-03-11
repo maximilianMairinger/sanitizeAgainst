@@ -1,4 +1,4 @@
 import saniObj from "../../app/src/saniObj"
 //const testElem = document.querySelector("#test")
 
-saniObj()
+console.log(saniObj({req: {name: false}})({req: {name: null}}))
