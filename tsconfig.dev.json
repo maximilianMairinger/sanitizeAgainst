@@ -6,6 +6,8 @@
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "allowJs": true,
-    "skipLibCheck": true
-  }
+    "skipLibCheck": true,
+    "lib": ["ES2022"]
+  },
+  "include": ["repl/src", "app/src"]
 }
