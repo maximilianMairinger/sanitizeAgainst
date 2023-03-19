@@ -27,15 +27,15 @@
     "url": "git+https://github.com/maximilianMairinger/saniObj.git"
   },
   "keywords": [
-  "sanitize",
-  "sani",
-  "obj",
-  "object",
-  "validation",
-  "verify",
-  "pick",
-  "schema"
-],
+    "sanitize",
+    "sani",
+    "obj",
+    "object",
+    "validation",
+    "verify",
+    "pick",
+    "schema"
+  ],
   "author": "maximilianMairinger",
   "license": "ISC",
   "bugs": {
@@ -49,9 +49,14 @@
     "@rollup/plugin-typescript": "^5.0.0",
     "@types/jest": "^26.0.15",
     "@types/node": "^13.13.4",
+    "circ-clone": "^1.0.1",
+    "circ-json": "^1.0.3",
     "commander": "^6.2.1",
     "del-cli": "^5.0.0",
+    "fast-equals": "^5.0.0",
     "jest": "^26.6.3",
+    "jest-expect-ordered": "^1.0.0",
+    "number-to-words": "^1.2.4",
     "renamer": "^4.0.0",
     "rollup": "^2.18.1",
     "tslib": "2.0.0",
@@ -59,6 +64,6 @@
     "webpack-merge": "^5.0.9"
   },
   "dependencies": {
-
+    "object.hasown": "^1.1.2"
   }
 }

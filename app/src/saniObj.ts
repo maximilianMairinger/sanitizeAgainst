@@ -1,4 +1,15 @@
-type Prim<InputParam = unknown> = string | typeof String | number | typeof Number | boolean | typeof Boolean | ((input: InputParam) => unknown) | Combinator
+export async function polyfill() {
+  if (!(Object as any).hasOwn) {
+    const { shim } = await import("object.hasown")
+    shim()
+  }
+}
+
+
+
+// todo: cyclic
+
+type Prim<InputParam = unknown> = string | typeof String | number | typeof Number | boolean | typeof Boolean | ((input: InputParam) => unknown) | Combinator | typeof Object
 type Obj = { [key: string]: Prim | Obj }
 type Pattern = Prim | Obj
 
@@ -8,26 +19,24 @@ type InpPrim = string | number | boolean
 type InpObj = { [key: string]: InpPrim | InpObj }
 type Inp = InpPrim | InpObj
 
-abstract class Combinator<Pat extends Pattern = Pattern> {
+abstract class Combinator {
   abstract matches(input: unknown): unknown
 }
 
-abstract class BooleanCombinator<Pat extends Pattern = Pattern> extends Combinator<Pat> {
+
+abstract class BooleanCombinator extends Combinator {
   public ar: Function[]
-  constructor(...ar: (Obj | Prim)[]) {
+  constructor(...ar: any[]) {
     super()
     this.ar = ar.map((a) => sanitize(a))
   }
 }
 
 
-type _ParseIfCombinator<Val extends Prim> = Val extends AND<infer Pat> ? Sanitized<Pat> : Val extends OR<infer Pat> ? Sanitized<Pat> : Val extends NOT<infer Arg> ? Exclude<Inp, Sanitized<Arg>> : Val // This cannot be done with a single combinator infer as of 12.03.2023.
-type QQQ = _ParseIfCombinator<AND<typeof Number>>
-// type Q<Val> = Val extends Combinator<infer Pat> ? Pat extends  : Val
 
-export class AND<Pat extends Pattern = Pattern> extends BooleanCombinator<Pat> {
+export class AND<Pat extends Pattern> extends BooleanCombinator {
   private isAndComb: any
-  constructor(...ar: [...(Obj | Prim)[], Pat]) {
+  constructor(...ar: [...Pattern[], Pat]) {
     super(...ar)
   }
   matches(input: unknown) {
@@ -39,10 +48,10 @@ export class AND<Pat extends Pattern = Pattern> extends BooleanCombinator<Pat> {
   }
 }
 
-export class OR<Pat extends Pattern = Pattern> extends BooleanCombinator<Pat> {
+export class OR<Arg extends Pattern[], Pat extends Arg[number] = Arg[number]> extends BooleanCombinator {
   // We need these props to make OR and AND unique types so we can check for them in the conditional type of ParseIfCombinator. Otherwise the first check would include both or something and not work.
   private isOrComb: any
-  constructor(...ar: ((Obj | Prim) & Pat)[]) {
+  constructor(...ar: Arg) {
     super(...ar)
   }
   matches(input: unknown) {
@@ -55,7 +64,7 @@ export class OR<Pat extends Pattern = Pattern> extends BooleanCombinator<Pat> {
   }
 }
 
-export class NOT<Arg extends Pattern = Pattern, Pat extends Exclude<Pattern, Arg> = any> extends Combinator<Pat> {
+export class NOT<Arg extends Pattern = Pattern, Pat extends Exclude<Pattern, Arg> = Exclude<Pattern, Arg>> extends Combinator {
   private isNOTComb: any
   public ar: Function
   constructor(ar: Arg) {
@@ -75,62 +84,79 @@ export class NOT<Arg extends Pattern = Pattern, Pat extends Exclude<Pattern, Arg
   }
 }
 
+function getNumberOfQuestionmarksAtTheEndOfString(str: string) {
+  let i = str.length - 1
+  let count = 0
+  while (str[i] === "?") {
+    count++
+    i--
+  }
+  return count
+}
+
+function againstPrimitiveDefault(type: string, defaultVal: unknown) {
+  return (input: unknown) => {
+    if (input === undefined || input === null) return defaultVal
+    else if (typeof input === type) return input
+    else throw new Error(`Input is not a ${type}`)
+  }
+}
+
+function againstPrimitive(type: string) {
+  return (input: unknown) => {
+    if (typeof input === type) return input
+    else throw new Error(`Input is not a ${type}`)
+  }
+}
+
+
 export function sanitize<Pat extends Pattern>(pattern: Pat) {
   let against: (input: unknown) => unknown
-  
-  if (typeof pattern === "string") against = (input) => {
-    if (input === undefined || input === null) return pattern
-    else if (typeof input === 'string') return input
-    else throw new Error('Input is not a string')
-  }
-  else if (pattern === String) against = (input) => {
-    if (typeof input === "string") return input
-    else throw new Error('Input is not a string')
-  }
-  else if (typeof pattern === "number") against = (input) => {
-    if (input === undefined || input === null) return pattern
-    else if (typeof input === 'number') return input
-    else throw new Error('Input is not a number')
-  }
-  else if (pattern === Number) against = (input) => {
-    if (typeof input === "number") return input
-    else throw new Error('Input is not a number')
-  }
-  else if (typeof pattern === "boolean") against = (input) => {
-    if (input === undefined || input === null) return pattern
-    else if (typeof input === 'boolean') return input
-    else throw new Error('Input is not a boolean')
-  }
-  else if (pattern === Boolean) against = (input) => {
-    if (typeof input === "boolean") return input
-    else throw new Error('Input is not a boolean')
-  }
-  else if (pattern instanceof Function) against = pattern as any
+
+  const type = typeof pattern
+
+  if (type === "string") against = againstPrimitiveDefault("string", pattern)
+  else if (type === "number") against = againstPrimitiveDefault("number", pattern)
+  else if (type === "boolean") against = againstPrimitiveDefault("boolean", pattern)
+  else if (pattern === String) against = againstPrimitive("string")
+  else if (pattern === Number) against = againstPrimitive("number")
+  else if (pattern === Boolean) against = againstPrimitive("boolean")
   else if (pattern instanceof Combinator) against = pattern.matches.bind(pattern)
+  else if (pattern === Object) against = (input) => {
+    if (typeof input !== "object" || input === null || input instanceof Array) throw new Error('Input is not an object')
+    return input
+  }
+  // It is important that this check is after all the constructor checks like if (input === Boolean)
+  else if (pattern instanceof Function) against = pattern as any
   else if (typeof pattern === "object" && pattern !== null) {
     const requiredPattern = new Map<any, any>()
     const optinalPattern = new Map<any, any>()
     for (const key in pattern) {
-      if (key.endsWith("?")) {
-        if (key.endsWith("??")) requiredPattern.set(key, sanitize(pattern[key.slice(0, -1)]))
-        else optinalPattern.set(key, sanitize(pattern[key.slice(0, -1)]))
-      }
-      else requiredPattern.set(key, sanitize(pattern[key] as any))
+      const numberOfQuestionmarks = getNumberOfQuestionmarksAtTheEndOfString(key);
+      let questionMarksToRemove = -Math.floor(numberOfQuestionmarks/2);
+      const isEvan = numberOfQuestionmarks % 2 === 0;
+      if (!isEvan) questionMarksToRemove--;
+      const keyWithoutQuestionmarks = questionMarksToRemove !== 0 ? key.slice(0, questionMarksToRemove) : key;
+      
+      (isEvan ? requiredPattern : optinalPattern).set(keyWithoutQuestionmarks, sanitize(pattern[key] as any))
     }
 
     against = (input) => {
-      if (typeof input !== "object" || input === null) throw new Error('Input is not an object')
+      if (input === null || input === undefined) input = {}
+      else if (typeof input !== "object" || input instanceof Array) throw new Error('Input is not an object')
       const out = Object.create(null)
 
-      for (const [key, val] of requiredPattern) {
-        out[key] = val(input[key])
+      for (const [key, nestedAgainst] of requiredPattern) {
+        const val = input[key] === undefined || Object.hasOwn(input as object, key) ? input[key] : undefined
+        out[key] = nestedAgainst(val)
       }
 
-      for (const [key, val] of optinalPattern) {
-        if (input[key] !== undefined) out[key] = val(input[key])
+      for (const [key, nestedAgainst] of optinalPattern) {
+        if (Object.hasOwn(input as object, key)) out[key] = nestedAgainst(input[key])
       }
 
-
+      // do this e.g. for equaals functions. Some implementations (e.g. fast-equals) check constructor for equality
+      Object.setPrototypeOf(out, Object.prototype)
       
       return out
     }
@@ -154,12 +180,12 @@ type EscapeAndFilterQuestionmarkProps<Ob> = {[key in keyof Ob as (key extends st
 type EscapeQuestionmarkProps<Ob> = {[key in keyof Ob as key extends string ? EscapeQuestionmarkKey<key> : key]: Ob[key]}
 
 
-type ParseIfCombinator<Val extends Prim> = Val extends AND<infer Pat> ? Sanitized<Pat> : Val extends OR<infer Pat> ? Sanitized<Pat> : Val extends NOT<infer Arg> ? Exclude<Inp, Sanitized<Arg>> : Val // This cannot be done with a single combinator infer as of 12.03.2023.
+type ParseIfCombinator<Val extends Prim> = Val extends AND<infer Pat> ? Sanitized<Pat> : Val extends OR<infer Arg> ? Sanitized<Arg[number]> : Val extends NOT<infer Arg> ? Exclude<Inp, Sanitized<Arg>> : Val // This cannot be done with a single combinator infer as of 12.03.2023.
 type ParseVal<Val extends Prim> = Val extends ((...a: unknown[]) => unknown) ? ReturnType<Val> : Val extends typeof Number ? number : Val extends typeof String ? string : Val extends typeof Boolean ? boolean : ParseIfCombinator<Val>
 type ParseValOb<Ob extends {[key in string]: Prim}> = {[key in keyof Ob]: ParseVal<Ob[key]>}
 
 type SanitizeNotNestedOb<Ob extends {[key in string]: unknown}> = ParseValOb<PartiallyOptional<EscapeQuestionmarkProps<Ob>, keyof EscapeQuestionmarkProps<Ob> & keyof EscapeAndFilterQuestionmarkProps<Ob>>>
-type SanitizeNestedOb<Ob extends {[key in string]: unknown}> = {[key in keyof SanitizeNotNestedOb<Ob>]: SanitizeNotNestedOb<Ob>[key] extends {[key in string]: unknown} ? SanitizeNotNestedOb<Ob>[key] : SanitizeNotNestedOb<Ob>[key]}
+type SanitizeNestedOb<Ob extends {[key in string]: unknown}> = {[key in keyof SanitizeNotNestedOb<Ob>]: SanitizeNotNestedOb<Ob>[key] extends {[key in string]: unknown} ? SanitizeNotNestedOb<SanitizeNotNestedOb<Ob>[key]> : SanitizeNotNestedOb<Ob>[key]}
 
 type Sanitized<Ob extends Pattern> = Ob extends Prim ? ParseVal<Ob> : Ob extends {[key in string]: unknown} ? SanitizeNestedOb<Ob> : never
 
@@ -172,11 +198,3 @@ type Inputified<Ob extends Pattern> = Sanitized<Ob>
 export default sanitize
 
 
-
-const e = sanitize({"req?": {
-  "name?": "string",
-  "age??": "number",
-}})
-
-
-const eee = e({})
