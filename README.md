@@ -1,6 +1,6 @@
-# Sanitize Object
+# Sanitize Against
 
-Sani-obj is a library for sanitizing objects, intended to filter the options of incoming requests on the server. It is highly customizable, but simple to use and tries to be decently fast while being safe.
+Sanitize Against is a library for sanitizing objects, intended to filter the options of incoming requests on the server. It is highly customizable, but simple to use and tries to be decently fast while being safe.
 
 ## Why?
 
@@ -14,19 +14,19 @@ Sani-obj is a library for sanitizing objects, intended to filter the options of 
 ## Installation
 
 ```shell
- $ npm i sani-obj
+ $ npm i sanitize-against
 ```
 
 ### ESM
 
 ```ts
-import sanitize, { OR, AND, NOT } from "sani-obj"
+import sanitize, { OR, AND, NOT } from "sanitize-against"
 ```
 
 ### CJS
 
 ```ts
-const { sanitize, OR, AND, NOT } = require("sani-obj")
+const { sanitize, OR, AND, NOT } = require("sanitize-against")
 ```
 
 # Usage
@@ -353,7 +353,7 @@ Not supported yet.
 This module requires [`Object.hasOwn`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/hasOwn#browser_compatibility) (>= Node 16.9.0, >= Chrome 93). If you need to support older environments, you can lazy load all polyfills with the following code:
 
 ```ts
-import { polyfill } from "sani-obj"
+import { polyfill } from "sanitize-against"
 
 await polyfill()
 ```
