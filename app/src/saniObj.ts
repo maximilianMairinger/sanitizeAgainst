@@ -18,15 +18,17 @@ type InpObj = { [key: string]: InpPrim | InpObj }
 type Inp = InpPrim | InpObj
 
 abstract class Combinator {
+  patterns: Pattern[]
+  sanis: Function[] // this gets generated in the recSanitize function
   abstract matches(input: unknown): unknown
 }
 
 
 abstract class BooleanCombinator extends Combinator {
-  public ar: Function[]
-  constructor(...ar: any[]) {
+  constructor(...inputs: any[]) {
     super()
-    this.ar = ar.map((a) => sanitize(a))
+    this.patterns = inputs
+    // this.ar = ar.map((a) => sanitizeRec(a))
   }
 }
 
@@ -39,7 +41,7 @@ export class AND<Pat extends Pattern> extends BooleanCombinator {
   }
   matches(input: unknown) {
     let curRet = input
-    for (const a of this.ar) {
+    for (const a of this.sanis) {
       curRet = a(curRet)
     }
     return curRet as any
@@ -53,7 +55,7 @@ export class OR<Arg extends Pattern[], Pat extends Arg[number] = Arg[number]> ex
     super(...ar)
   }
   matches(input: unknown) {
-    for (const a of this.ar) {
+    for (const a of this.sanis) {
       try {
         return a(input)
       } catch (e) {}
@@ -64,15 +66,15 @@ export class OR<Arg extends Pattern[], Pat extends Arg[number] = Arg[number]> ex
 
 export class NOT<Arg extends Pattern = Pattern, Pat extends Exclude<Pattern, Arg> = Exclude<Pattern, Arg>> extends Combinator {
   private isNOTComb: any
-  public ar: Function
   constructor(ar: Arg) {
     super()
-    this.ar = sanitize(ar)
+    this.patterns = [ar]
+    // this.ar = sanitize(ar)
   }
   matches(input: unknown) {
     let throws: boolean
     try {
-      this.ar(input)
+      this.sanis[0](input)
       throws = false
     } catch (e) {
       throws = true
@@ -107,9 +109,22 @@ function againstPrimitive(type: string) {
   }
 }
 
-const knownPatternObjects = new WeakMap<object, (input: unknown) => unknown>()
-const knownInputObjects = new WeakMap<object, object>()
-export function sanitize<Pat extends Pattern>(pattern: Pat): (input: unknown) => unknown {
+let knownPatternObjects: WeakMap<object, (input: unknown) => unknown>
+let knownInputObjects: WeakMap<object, object>
+function sanitize<Pat extends Pattern>(pattern: Pat) {
+  knownPatternObjects = new WeakMap()
+  const out = sanitizeRec(pattern)
+  knownPatternObjects = null
+  return (input: Inputified<Pat>) => {
+    knownInputObjects = new WeakMap()
+    const out2 = out(input)
+    knownInputObjects = null
+    return out2
+  }
+}
+
+
+function sanitizeRec<Pat extends Pattern>(pattern: Pat) {
   let against: (input: unknown) => unknown
 
   const type = typeof pattern
@@ -120,7 +135,10 @@ export function sanitize<Pat extends Pattern>(pattern: Pat): (input: unknown) =>
   else if (pattern === String) against = againstPrimitive("string")
   else if (pattern === Number) against = againstPrimitive("number")
   else if (pattern === Boolean) against = againstPrimitive("boolean")
-  else if (pattern instanceof Combinator) against = pattern.matches.bind(pattern)
+  else if (pattern instanceof Combinator) {
+    pattern.sanis = pattern.patterns.map((input) => sanitizeRec(input))
+    against = pattern.matches.bind(pattern)
+  }
   else if (pattern === Object) against = (input) => {
     if (typeof input !== "object" || input === null || input instanceof Array) throw new Error('Input is not an object')
     return input
@@ -139,7 +157,7 @@ export function sanitize<Pat extends Pattern>(pattern: Pat): (input: unknown) =>
       if (!isEvan) questionMarksToRemove--;
       const keyWithoutQuestionmarks = questionMarksToRemove !== 0 ? key.slice(0, questionMarksToRemove) : key;
       
-      (isEvan ? requiredPattern : optinalPattern).set(keyWithoutQuestionmarks, sanitize(pattern[key] as any))
+      (isEvan ? requiredPattern : optinalPattern).set(keyWithoutQuestionmarks, sanitizeRec(pattern[key] as any))
     }
 
     against = (input) => {
