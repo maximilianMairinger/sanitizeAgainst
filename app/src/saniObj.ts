@@ -7,8 +7,6 @@ export async function polyfill() {
 
 
 
-// todo: cyclic
-
 type Prim<InputParam = unknown> = string | typeof String | number | typeof Number | boolean | typeof Boolean | ((input: InputParam) => unknown) | Combinator | typeof Object
 type Obj = { [key: string]: Prim | Obj }
 type Pattern = Prim | Obj
@@ -109,8 +107,9 @@ function againstPrimitive(type: string) {
   }
 }
 
-
-export function sanitize<Pat extends Pattern>(pattern: Pat) {
+const knownPatternObjects = new WeakMap<object, (input: unknown) => unknown>()
+const knownInputObjects = new WeakMap<object, object>()
+export function sanitize<Pat extends Pattern>(pattern: Pat): (input: unknown) => unknown {
   let against: (input: unknown) => unknown
 
   const type = typeof pattern
@@ -129,6 +128,8 @@ export function sanitize<Pat extends Pattern>(pattern: Pat) {
   // It is important that this check is after all the constructor checks like if (input === Boolean)
   else if (pattern instanceof Function) against = pattern as any
   else if (typeof pattern === "object" && pattern !== null) {
+    if (knownPatternObjects.has(pattern)) return knownPatternObjects.get(pattern) 
+
     const requiredPattern = new Map<any, any>()
     const optinalPattern = new Map<any, any>()
     for (const key in pattern) {
@@ -144,7 +145,9 @@ export function sanitize<Pat extends Pattern>(pattern: Pat) {
     against = (input) => {
       if (input === null || input === undefined) input = {}
       else if (typeof input !== "object" || input instanceof Array) throw new Error('Input is not an object')
+      if (knownInputObjects.has(input as any)) return knownInputObjects.get(input as any)
       const out = Object.create(null)
+      knownInputObjects.set(input as any, out)
 
       for (const [key, nestedAgainst] of requiredPattern) {
         const val = input[key] === undefined || Object.hasOwn(input as object, key) ? input[key] : undefined
@@ -160,6 +163,8 @@ export function sanitize<Pat extends Pattern>(pattern: Pat) {
       
       return out
     }
+
+    knownPatternObjects.set(pattern, against)
   }
 
   
