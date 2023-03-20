@@ -1,6 +1,6 @@
 {
   "name": "sanitize-against",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Highly customizable, but simple to use, sanitization of objects and primitives.",
   "main": "./app/dist/esm/saniObj.mjs",
   "types": "./app/dist/esm/saniObj.d.ts",
