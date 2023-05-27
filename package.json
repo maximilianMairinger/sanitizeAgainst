@@ -39,9 +39,9 @@
   "author": "maximilianMairinger",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/maximilianMairinger/saniObj/issues"
+    "url": "https://github.com/maximilianMairinger/sanitizeAgainst/issues"
   },
-  "homepage": "https://github.com/maximilianMairinger/saniObj#readme",
+  "homepage": "https://github.com/maximilianMairinger/sanitizeAgainst#readme",
   "devDependencies": {
     "@rollup/plugin-commonjs": "^13.0.0",
     "@rollup/plugin-json": "^4.1.0",
