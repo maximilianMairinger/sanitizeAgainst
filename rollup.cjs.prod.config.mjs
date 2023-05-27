@@ -5,16 +5,17 @@ import json from '@rollup/plugin-json'
 
 
 export default {
-  input: 'repl/src/repl.ts',
+  input: './app/src/sanitizeAgainst.ts',
   output: {
-    file: 'repl/dist/saniObj-repl.js',
+    file: 'app/dist/cjs/sanitizeAgainst.js',
     format: 'cjs',
-    sourcemap: true
+    sourcemap: true,
+    inlineDynamicImports: true
   },
-  sourcemap: true,
+  
   plugins: [
-    typescript({tsconfig: "./tsconfig.dev.json", noEmitOnError: false, sourceMap: true}), 
-    resolve({browser: true}),
+    typescript({tsconfig: "./tsconfig.cjs.json", noEmitOnError: false, sourceMap: true}), 
+    resolve({modulesOnly: true, preferBuiltins: true}),
     commonJS({
       include: 'node_modules/**'
     }),

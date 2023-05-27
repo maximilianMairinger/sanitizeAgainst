@@ -7,7 +7,7 @@ import json from '@rollup/plugin-json'
 export default {
   input: 'repl/src/repl.ts',
   output: {
-    file: 'repl/dist/saniObj-repl.js',
+    file: 'repl/dist/sanitizeAgainst-repl.js',
     format: 'cjs',
     sourcemap: true
   },

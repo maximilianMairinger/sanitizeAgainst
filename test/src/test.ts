@@ -1,4 +1,4 @@
-import saniObj, { AND, OR, NOT } from "../../app/src/saniObj"
+import sani, { AND, OR, NOT } from "../../app/src/sanitizeAgainst"
 import "./extend"
 
 
@@ -7,158 +7,158 @@ import "./extend"
 describe("core", () => {
   
   test("spesific boolean default type", () => {
-    expect(saniObj(false)(undefined)).eq(false)
-    expect(saniObj(true)(undefined)).eq(true)
-    expect(saniObj(false)(null)).eq(false)
-    expect(saniObj(true)(null)).eq(true)
+    expect(sani(false)(undefined)).eq(false)
+    expect(sani(true)(undefined)).eq(true)
+    expect(sani(false)(null)).eq(false)
+    expect(sani(true)(null)).eq(true)
   })
 
   test("spesific boolean default type with spesific value", () => {
-    expect(saniObj(false)(true)).eq(true)
-    expect(saniObj(true)(false)).eq(false)
+    expect(sani(false)(true)).eq(true)
+    expect(sani(true)(false)).eq(false)
 
-    expect(() => saniObj(false)(2)).toThrow()
-    expect(() => saniObj(false)({})).toThrow()
-    expect(() => saniObj(false)([])).toThrow()
-    expect(() => saniObj(false)("")).toThrow()
-    expect(() => saniObj(false)(" ")).toThrow()
-    expect(() => saniObj(false)("false")).toThrow()
+    expect(() => sani(false)(2)).toThrow()
+    expect(() => sani(false)({})).toThrow()
+    expect(() => sani(false)([])).toThrow()
+    expect(() => sani(false)("")).toThrow()
+    expect(() => sani(false)(" ")).toThrow()
+    expect(() => sani(false)("false")).toThrow()
   })
   
   test("Unspesific boolean requirement default", () => {
-    expect(() => saniObj(Boolean)(undefined)).toThrow()
-    expect(() => saniObj(Boolean)(null)).toThrow()
+    expect(() => sani(Boolean)(undefined)).toThrow()
+    expect(() => sani(Boolean)(null)).toThrow()
   })
 
   test("Unspesific boolean requirement with spesific value", () => {
-    expect(saniObj(Boolean)(true)).eq(true)
-    expect(saniObj(Boolean)(false)).eq(false)
+    expect(sani(Boolean)(true)).eq(true)
+    expect(sani(Boolean)(false)).eq(false)
 
-    expect(() => saniObj(Boolean)(2)).toThrow()
-    expect(() => saniObj(Boolean)({})).toThrow()
-    expect(() => saniObj(Boolean)([])).toThrow()
-    expect(() => saniObj(Boolean)("")).toThrow()
-    expect(() => saniObj(Boolean)(" ")).toThrow()
-    expect(() => saniObj(Boolean)("false")).toThrow()
+    expect(() => sani(Boolean)(2)).toThrow()
+    expect(() => sani(Boolean)({})).toThrow()
+    expect(() => sani(Boolean)([])).toThrow()
+    expect(() => sani(Boolean)("")).toThrow()
+    expect(() => sani(Boolean)(" ")).toThrow()
+    expect(() => sani(Boolean)("false")).toThrow()
   })
 
 
   test("spesific number default type", () => {
-    expect(saniObj(0)(undefined)).eq(0)
-    expect(saniObj(2021)(undefined)).eq(2021)
-    expect(saniObj(0)(null)).eq(0)
-    expect(saniObj(2021)(null)).eq(2021)
+    expect(sani(0)(undefined)).eq(0)
+    expect(sani(2021)(undefined)).eq(2021)
+    expect(sani(0)(null)).eq(0)
+    expect(sani(2021)(null)).eq(2021)
   })
 
   test("spesific number default type with spesific value", () => {
-    expect(saniObj(0)(2)).eq(2)
-    expect(saniObj(2021)(2)).eq(2)
+    expect(sani(0)(2)).eq(2)
+    expect(sani(2021)(2)).eq(2)
 
-    expect(() => saniObj(0)(true)).toThrow()
-    expect(() => saniObj(2021)(false)).toThrow()
-    expect(() => saniObj(0)({})).toThrow()
-    expect(() => saniObj(0)([])).toThrow()
-    expect(() => saniObj(0)("")).toThrow()
-    expect(() => saniObj(0)(" ")).toThrow()
-    expect(() => saniObj(0)("false")).toThrow()
+    expect(() => sani(0)(true)).toThrow()
+    expect(() => sani(2021)(false)).toThrow()
+    expect(() => sani(0)({})).toThrow()
+    expect(() => sani(0)([])).toThrow()
+    expect(() => sani(0)("")).toThrow()
+    expect(() => sani(0)(" ")).toThrow()
+    expect(() => sani(0)("false")).toThrow()
   })
 
   test("Unspesific number requirement default", () => {
-    expect(() => saniObj(Number)(undefined)).toThrow()
-    expect(() => saniObj(Number)(null)).toThrow()
+    expect(() => sani(Number)(undefined)).toThrow()
+    expect(() => sani(Number)(null)).toThrow()
   })
 
   test("Unspesific number requirement with spesific value", () => {
-    expect(saniObj(Number)(2)).eq(2)
+    expect(sani(Number)(2)).eq(2)
 
-    expect(() => saniObj(Number)(true)).toThrow()
-    expect(() => saniObj(Number)(false)).toThrow()
-    expect(() => saniObj(Number)({})).toThrow()
-    expect(() => saniObj(Number)([])).toThrow()
-    expect(() => saniObj(Number)("")).toThrow()
-    expect(() => saniObj(Number)(" ")).toThrow()
-    expect(() => saniObj(Number)("false")).toThrow()
+    expect(() => sani(Number)(true)).toThrow()
+    expect(() => sani(Number)(false)).toThrow()
+    expect(() => sani(Number)({})).toThrow()
+    expect(() => sani(Number)([])).toThrow()
+    expect(() => sani(Number)("")).toThrow()
+    expect(() => sani(Number)(" ")).toThrow()
+    expect(() => sani(Number)("false")).toThrow()
   })
 
   test("spesific string default type", () => {
-    expect(saniObj("")("")).eq("")
-    expect(saniObj("test")("")).eq("")
-    expect(saniObj("")(null)).eq("")
-    expect(saniObj("test")(null)).eq("test")
+    expect(sani("")("")).eq("")
+    expect(sani("test")("")).eq("")
+    expect(sani("")(null)).eq("")
+    expect(sani("test")(null)).eq("test")
   })
 
   test("spesific string default type with spesific value", () => {
-    expect(saniObj("")("test")).eq("test")
-    expect(saniObj("test")("test")).eq("test")
+    expect(sani("")("test")).eq("test")
+    expect(sani("test")("test")).eq("test")
 
-    expect(() => saniObj("")(true)).toThrow()
-    expect(() => saniObj("test")(false)).toThrow()
-    expect(() => saniObj("")(2)).toThrow()
-    expect(() => saniObj("")({})).toThrow()
-    expect(() => saniObj("")([])).toThrow()
+    expect(() => sani("")(true)).toThrow()
+    expect(() => sani("test")(false)).toThrow()
+    expect(() => sani("")(2)).toThrow()
+    expect(() => sani("")({})).toThrow()
+    expect(() => sani("")([])).toThrow()
   })
 
   test("Unspesific string requirement default", () => {
-    expect(() => saniObj(String)(undefined)).toThrow()
-    expect(() => saniObj(String)(null)).toThrow()
+    expect(() => sani(String)(undefined)).toThrow()
+    expect(() => sani(String)(null)).toThrow()
   })
 
   test("Unspesific string requirement with spesific value", () => {
-    expect(saniObj(String)("test")).eq("test")
+    expect(sani(String)("test")).eq("test")
 
-    expect(() => saniObj(String)(true)).toThrow()
-    expect(() => saniObj(String)(false)).toThrow()
-    expect(() => saniObj(String)(2)).toThrow()
-    expect(() => saniObj(String)({})).toThrow()
-    expect(() => saniObj(String)([])).toThrow()
+    expect(() => sani(String)(true)).toThrow()
+    expect(() => sani(String)(false)).toThrow()
+    expect(() => sani(String)(2)).toThrow()
+    expect(() => sani(String)({})).toThrow()
+    expect(() => sani(String)([])).toThrow()
   })
 
   test("spesific object default type", () => {
-    expect(saniObj({})({})).eq({})
-    expect(saniObj({test: "test"})({})).eq({test: "test"})
-    expect(saniObj({})(null)).eq({})
-    expect(saniObj({test: "test"})(null)).eq({test: "test"})
+    expect(sani({})({})).eq({})
+    expect(sani({test: "test"})({})).eq({test: "test"})
+    expect(sani({})(null)).eq({})
+    expect(sani({test: "test"})(null)).eq({test: "test"})
   })
 
   test("spesific object default type with spesific value", () => {
-    expect(saniObj({})({test: "test"})).eq({})
-    expect(saniObj({test: "test"})({test: "test"})).eq({test: "test"})
+    expect(sani({})({test: "test"})).eq({})
+    expect(sani({test: "test"})({test: "test"})).eq({test: "test"})
 
-    expect(() => saniObj({})("test")).toThrow()
-    expect(() => saniObj({test: "test"})("test")).toThrow()
-    expect(saniObj({test: "test"})({})).eq({test: "test"})
-    expect(() => saniObj({})([])).toThrow()
-    expect(() => saniObj({test: "test"})([])).toThrow()
+    expect(() => sani({})("test")).toThrow()
+    expect(() => sani({test: "test"})("test")).toThrow()
+    expect(sani({test: "test"})({})).eq({test: "test"})
+    expect(() => sani({})([])).toThrow()
+    expect(() => sani({test: "test"})([])).toThrow()
   })
 
   test("Unspesific object requirement default", () => {
-    expect(() => saniObj(Object)(undefined)).toThrow()
-    expect(() => saniObj(Object)(null)).toThrow()
+    expect(() => sani(Object)(undefined)).toThrow()
+    expect(() => sani(Object)(null)).toThrow()
   })
 
   test("Unspesific object requirement with spesific value", () => {
-    expect(saniObj(Object)({test: "test"})).eq({test: "test"})
+    expect(sani(Object)({test: "test"})).eq({test: "test"})
 
-    expect(() => saniObj(Object)("test")).toThrow()
-    expect(() => saniObj(Object)([])).toThrow()
+    expect(() => sani(Object)("test")).toThrow()
+    expect(() => sani(Object)([])).toThrow()
   })
 
   test("function requirement default", () => {
-    expect(saniObj((input) => {return 2})()).eq(2)
-    expect(saniObj((input) => {return 2})("test")).eq(2)
-    expect(saniObj((input) => {return 2})({})).eq(2)
-    expect(saniObj((input) => {return 2})([])).eq(2)
-    expect(saniObj((input) => {return 2})(null)).eq(2)
-    expect(saniObj((input) => {return 2})(undefined)).eq(2)
+    expect(sani((input) => {return 2})()).eq(2)
+    expect(sani((input) => {return 2})("test")).eq(2)
+    expect(sani((input) => {return 2})({})).eq(2)
+    expect(sani((input) => {return 2})([])).eq(2)
+    expect(sani((input) => {return 2})(null)).eq(2)
+    expect(sani((input) => {return 2})(undefined)).eq(2)
 
-    expect(saniObj((input) => {return "test"})()).eq("test")
-    expect(saniObj((input) => {return "test"})("test")).eq("test")
-    expect(saniObj((input) => {return "test"})({})).eq("test")
-    expect(saniObj((input) => {return "test"})([])).eq("test")
-    expect(saniObj((input) => {return "test"})(null)).eq("test")
-    expect(saniObj((input) => {return "test"})(undefined)).eq("test")
+    expect(sani((input) => {return "test"})()).eq("test")
+    expect(sani((input) => {return "test"})("test")).eq("test")
+    expect(sani((input) => {return "test"})({})).eq("test")
+    expect(sani((input) => {return "test"})([])).eq("test")
+    expect(sani((input) => {return "test"})(null)).eq("test")
+    expect(sani((input) => {return "test"})(undefined)).eq("test")
 
-    let against = saniObj((input) => {
+    let against = sani((input) => {
       if (input < 3) throw new Error("input is less than 3")
       return input
     })
@@ -175,22 +175,22 @@ describe("core", () => {
 
   describe("Logical combinators", () => {
     test("logical or spesific", () => {
-      expect(saniObj(new OR(String, 2, 2021, true))("")).eq("")
-      expect(saniObj(new OR(String, 2, 2021, true))("lelqwle")).eq("lelqwle")
-      expect(saniObj(new OR(String, 2, 2021, true))(2)).eq(2)
-      expect(saniObj(new OR(String, 2, 2021, true))(2021)).eq(2021)
-      expect(saniObj(new OR(String, 2, 2021, true))(true)).eq(true)
-      expect(saniObj(new OR(String, 2, 2021, true))(null)).eq(2)
-      expect(saniObj(new OR(String, 2, 2021, true))(undefined)).eq(2)
+      expect(sani(new OR(String, 2, 2021, true))("")).eq("")
+      expect(sani(new OR(String, 2, 2021, true))("lelqwle")).eq("lelqwle")
+      expect(sani(new OR(String, 2, 2021, true))(2)).eq(2)
+      expect(sani(new OR(String, 2, 2021, true))(2021)).eq(2021)
+      expect(sani(new OR(String, 2, 2021, true))(true)).eq(true)
+      expect(sani(new OR(String, 2, 2021, true))(null)).eq(2)
+      expect(sani(new OR(String, 2, 2021, true))(undefined)).eq(2)
   
-      expect(() => saniObj(new OR(String, 2, 2021, true))({})).toThrow()
-      expect(() => saniObj(new OR(String, 2, 2021, true))([])).toThrow()
-      expect(saniObj(new OR(String, 2, 2021, true))(false)).eq(false)
-      expect(saniObj(new OR(String, 2, 2021, true))(2022)).eq(2022)
+      expect(() => sani(new OR(String, 2, 2021, true))({})).toThrow()
+      expect(() => sani(new OR(String, 2, 2021, true))([])).toThrow()
+      expect(sani(new OR(String, 2, 2021, true))(false)).eq(false)
+      expect(sani(new OR(String, 2, 2021, true))(2022)).eq(2022)
     })
   
     test("logical and spesific", () => {
-      let against = saniObj(new AND(Number, (number) => {
+      let against = sani(new AND(Number, (number) => {
         if (number < 3) throw new Error("input is less than 3")
         return number
       }))
@@ -208,7 +208,7 @@ describe("core", () => {
     })
 
     test("logical and default is last priority", () => {
-      let against = saniObj(new AND((number) => {
+      let against = sani(new AND((number) => {
         if (number < 3) throw new Error("input is less than 3")
         return number
       }, Number, (input) => {
@@ -228,7 +228,7 @@ describe("core", () => {
     })
 
     test("logical and chain forwards last result and doesnt take original input", () => {
-      let against = saniObj(new AND((number) => {
+      let against = sani(new AND((number) => {
         if (number < 3) throw new Error("input is less than 3")
         return "abc"
       }, Number))
@@ -246,17 +246,17 @@ describe("core", () => {
     })
 
     test("logical not", () => {
-      expect(() => saniObj(new NOT(String))("")).toThrow()
-      expect(() => saniObj(new NOT(String))("lelqwle")).toThrow()
-      expect(saniObj(new NOT(String))(2)).eq(2)
-      expect(saniObj(new NOT(String))(2021)).eq(2021)
-      expect(saniObj(new NOT(String))(true)).eq(true)
-      expect(saniObj(new NOT(String))(null)).eq(null)
-      expect(saniObj(new NOT(String))(undefined)).eq(undefined)
+      expect(() => sani(new NOT(String))("")).toThrow()
+      expect(() => sani(new NOT(String))("lelqwle")).toThrow()
+      expect(sani(new NOT(String))(2)).eq(2)
+      expect(sani(new NOT(String))(2021)).eq(2021)
+      expect(sani(new NOT(String))(true)).eq(true)
+      expect(sani(new NOT(String))(null)).eq(null)
+      expect(sani(new NOT(String))(undefined)).eq(undefined)
     })
 
     test("logical or & and combination", () => {
-      let against = saniObj(new OR(new AND(Number, (number) => {
+      let against = sani(new OR(new AND(Number, (number) => {
         if (number < 3) throw new Error("input is less than 3")
         return number
       }), Boolean))
@@ -275,7 +275,7 @@ describe("core", () => {
     })  
 
     test("logical and & not combination", () => {
-      let against = saniObj(new AND(new NOT(String), (i) => {if (i === 2) throw new Error(); return i}))
+      let against = sani(new AND(new NOT(String), (i) => {if (i === 2) throw new Error(); return i}))
 
       expect(against(3)).eq(3)
       expect(against(4)).eq(4)
@@ -291,7 +291,7 @@ describe("core", () => {
     })
 
     test("logical not & function", () => {
-      let against = saniObj(new NOT((i) => {if (i === 2) throw new Error(); return i}))
+      let against = sani(new NOT((i) => {if (i === 2) throw new Error(); return i}))
 
       expect(() => against(3)).toThrow()
       expect(() => against(4)).toThrow()
@@ -313,7 +313,7 @@ describe("core", () => {
 
   describe("Nested objects", () => {
     test("Nested object required unspesific default", () => {
-      let against = saniObj({
+      let against = sani({
         test: {
           lel: Number,
           qwe: String
@@ -334,7 +334,7 @@ describe("core", () => {
     })
 
     test("Nested object required spesific default", () => {
-      let against = saniObj({
+      let against = sani({
         test: {
           lel: 2,
           qwe: "asd"
@@ -361,7 +361,7 @@ describe("core", () => {
     })
 
     test("Nested object optional unspesific default", () => {
-      let against = saniObj({
+      let against = sani({
         "test?": {
           lel: Number,
           qwe: String
@@ -383,7 +383,7 @@ describe("core", () => {
     })
 
     test("Nested object optional spesific default", () => {
-      let against = saniObj({
+      let against = sani({
         "test?": {
           lel: 2,
           qwe: String
@@ -402,34 +402,34 @@ describe("core", () => {
     })
 
     test("Object key with unspesific default but optional", () => {
-      expect(saniObj({"lel?": Number})({})).eq({})
-      expect(saniObj({"lel?": Number})({lel: 2})).eq({lel: 2})
-      expect(() => saniObj({"lel?": Number})({lel: "asd"})).toThrow()
-      expect(saniObj({"lel?": Number})({lel: 2, qwe: 2})).eq({lel: 2})
-      expect(saniObj({"lel?": Number})({lel: 2, qwe: "asd"})).eq({lel: 2})
-      expect(() => saniObj({"lel?": Number})({lel: "asd", qwe: "asd"})).toThrow()
-      expect(() => saniObj({"lel?": Number})({lel: "asd", qwe: 2})).toThrow()
-      expect(saniObj({"lel?": Number})({qwe: 2})).eq({})
-      expect(saniObj({"lel?": Number})({qwe: "asd"})).eq({})
+      expect(sani({"lel?": Number})({})).eq({})
+      expect(sani({"lel?": Number})({lel: 2})).eq({lel: 2})
+      expect(() => sani({"lel?": Number})({lel: "asd"})).toThrow()
+      expect(sani({"lel?": Number})({lel: 2, qwe: 2})).eq({lel: 2})
+      expect(sani({"lel?": Number})({lel: 2, qwe: "asd"})).eq({lel: 2})
+      expect(() => sani({"lel?": Number})({lel: "asd", qwe: "asd"})).toThrow()
+      expect(() => sani({"lel?": Number})({lel: "asd", qwe: 2})).toThrow()
+      expect(sani({"lel?": Number})({qwe: 2})).eq({})
+      expect(sani({"lel?": Number})({qwe: "asd"})).eq({})
     })
 
     test("Object key with spesific default and optional", () => {
-      expect(saniObj({"lel?": 2})({})).eq({})
-      expect(saniObj({"lel?": 2})({lel: 4})).eq({lel: 4})
-      expect(() => saniObj({"lel?": 2})({lel: "asd"})).toThrow()
-      expect(saniObj({"lel?": 2})({lel: 4, qwe: 2})).eq({lel: 4})
-      expect(saniObj({"lel?": 2})({lel: 3, qwe: "asd"})).eq({lel: 3})
-      expect(() => saniObj({"lel?": 2})({lel: "asd", qwe: "asd"})).toThrow()
-      expect(() => saniObj({"lel?": 2})({lel: "asd", qwe: 2})).toThrow()
-      expect(saniObj({"lel?": 2})({qwe: 2})).eq({})
-      expect(saniObj({"lel?": 2})({qwe: "asd"})).eq({})
-      expect(saniObj({"lel?": 2})({lel: undefined})).eq({lel: 2})
-      expect(saniObj({"lel?": 2})({lel: null})).eq({lel: 2})
+      expect(sani({"lel?": 2})({})).eq({})
+      expect(sani({"lel?": 2})({lel: 4})).eq({lel: 4})
+      expect(() => sani({"lel?": 2})({lel: "asd"})).toThrow()
+      expect(sani({"lel?": 2})({lel: 4, qwe: 2})).eq({lel: 4})
+      expect(sani({"lel?": 2})({lel: 3, qwe: "asd"})).eq({lel: 3})
+      expect(() => sani({"lel?": 2})({lel: "asd", qwe: "asd"})).toThrow()
+      expect(() => sani({"lel?": 2})({lel: "asd", qwe: 2})).toThrow()
+      expect(sani({"lel?": 2})({qwe: 2})).eq({})
+      expect(sani({"lel?": 2})({qwe: "asd"})).eq({})
+      expect(sani({"lel?": 2})({lel: undefined})).eq({lel: 2})
+      expect(sani({"lel?": 2})({lel: null})).eq({lel: 2})
     })
 
 
     test("Nested object with logical and", () => {
-      let against = saniObj({
+      let against = sani({
         "test?": new AND(Number, (inp) => {
           if (inp < 3) throw new Error("asd")
           else return inp
@@ -449,7 +449,7 @@ describe("core", () => {
     })
 
     test("Nested object with logical or", () => {
-      let against = saniObj({
+      let against = sani({
         "test?": new OR(Number, String)
       })
 
@@ -464,7 +464,7 @@ describe("core", () => {
     })
 
     test("Nested object with required logical or", () => {
-      let against = saniObj({
+      let against = sani({
         "test": new OR(Number, String)
       })
 
@@ -480,7 +480,7 @@ describe("core", () => {
 
 
     test("Nested object with logical or with nested ob inside", () => {
-      let against = saniObj({
+      let against = sani({
         "test?": new OR(Number, {
           asd: String
         })
@@ -503,7 +503,7 @@ describe("core", () => {
 
 
     test("escape optional char", () => {
-      let against = saniObj({
+      let against = sani({
         "test??": Number
       })
 
@@ -516,7 +516,7 @@ describe("core", () => {
       expect(() => against({})).toThrow()
       expect(() => against({qwe: 2})).toThrow()
 
-      let against2 = saniObj({
+      let against2 = sani({
         "test???": Number
       })
 
@@ -529,7 +529,7 @@ describe("core", () => {
       expect(against2({})).eq({})
       expect(against2({qwe: 2})).eq({})    
 
-      let against3 = saniObj({
+      let against3 = sani({
         "test????": Number
       })
 
@@ -542,7 +542,7 @@ describe("core", () => {
       expect(() => against3({})).toThrow()
       expect(() => against3({qwe: 2})).toThrow()
 
-      let against4 = saniObj({
+      let against4 = sani({
         "test?????": Number
       })
 
@@ -555,7 +555,7 @@ describe("core", () => {
       expect(against4({})).eq({})
       expect(against4({qwe: 2})).eq({})
 
-      let against5 = saniObj({
+      let against5 = sani({
         "test??????": Number
       })
 
@@ -568,7 +568,7 @@ describe("core", () => {
       expect(() => against5({})).toThrow()
       expect(() => against5({qwe: 2})).toThrow()
 
-      let against6 = saniObj({
+      let against6 = sani({
         "test???????": Number
       })
 
@@ -587,8 +587,8 @@ describe("core", () => {
     const input1 = Object.create(null)
     input1.__proto__ = 2
 
-    expect(saniObj({lel: 2})(input1)).eq({lel: 2})
-    expect(saniObj({})(input1)).eq({})
+    expect(sani({lel: 2})(input1)).eq({lel: 2})
+    expect(sani({})(input1)).eq({})
 
     let o = {}
     expect(o.__proto__).eq(Object.prototype)
@@ -597,7 +597,7 @@ describe("core", () => {
   test("__proto__ is cought unspesific default", () => {
     const pattern = Object.create(null)
     pattern.__proto__ = Number
-    let against = saniObj(pattern)
+    let against = sani(pattern)
 
     const expected = {} as any
     Object.defineProperty(expected, "__proto__", {value: 2, writable: true, enumerable: true})
@@ -645,7 +645,7 @@ describe("core", () => {
   test("__proto__ is cought spesific default", () => {
     const pattern = Object.create(null)
     pattern.__proto__ = 4
-    let against = saniObj(pattern)
+    let against = sani(pattern)
 
     const expectedDefault = {} as any
     expectedDefault.__proto__ = 4
