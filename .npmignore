@@ -16,5 +16,8 @@ tsconfig.json
 devServer.mjs
 jest.config.js
 .DS_Store
-
-
+rollup.node.prod.config.mjs
+tsconfig.cjs.json
+tsconfig.prod.json
+tsconfig.rollup.json 
+tsconfig.test.json
