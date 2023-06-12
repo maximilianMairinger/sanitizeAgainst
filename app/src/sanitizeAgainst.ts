@@ -7,7 +7,7 @@ export async function polyfill() {
 
 
 
-type Prim<InputParam = unknown> = string | typeof String | number | typeof Number | boolean | typeof Boolean | ((input: InputParam) => unknown) | Combinator | typeof Object
+type Prim<InputParam = unknown> = string | typeof String | number | typeof Number | boolean | typeof Boolean | ((input: InputParam) => unknown) | Matcher | typeof Object
 type Obj = { [key: string]: Prim | Obj }
 type Pattern = Prim | Obj
 
