@@ -11,16 +11,29 @@ type Prim<InputParam = unknown> = string | typeof String | number | typeof Numbe
 type Obj = { [key: string]: Prim | Obj }
 type Pattern = Prim | Obj
 
-
-
 type InpPrim = string | number | boolean
 type InpObj = { [key: string]: InpPrim | InpObj }
 type Inp = InpPrim | InpObj
 
-abstract class Combinator {
+
+abstract class Matcher {
+  abstract matches(input: unknown): unknown
+}
+
+export class CONST<MyPattern extends string | number | boolean> extends Matcher {
+  constructor(private constVal: MyPattern) {super()}
+  matches(input: unknown): unknown {
+    if (input !== this.constVal) throw `Expected ${this.constVal}, got ${input}`
+    return input
+  }
+}
+
+
+
+
+abstract class Combinator extends Matcher {
   patterns: Pattern[]
   sanis: Function[] // this gets generated in the recSanitize function
-  abstract matches(input: unknown): unknown
 }
 
 
@@ -135,8 +148,8 @@ function sanitizeRec<Pat extends Pattern>(pattern: Pat) {
   else if (pattern === String) against = againstPrimitive("string")
   else if (pattern === Number) against = againstPrimitive("number")
   else if (pattern === Boolean) against = againstPrimitive("boolean")
-  else if (pattern instanceof Combinator) {
-    pattern.sanis = pattern.patterns.map((input) => sanitizeRec(input))
+  else if (pattern instanceof Matcher) {
+    if (pattern instanceof Combinator) pattern.sanis = pattern.patterns.map((input) => sanitizeRec(input))
     against = pattern.matches.bind(pattern)
   }
   else if (pattern === Object) against = (input) => {
@@ -203,7 +216,7 @@ type EscapeAndFilterQuestionmarkProps<Ob> = {[key in keyof Ob as (key extends st
 type EscapeQuestionmarkProps<Ob> = {[key in keyof Ob as key extends string ? EscapeQuestionmarkKey<key> : key]: Ob[key]}
 
 
-type ParseIfCombinator<Val extends Prim> = Val extends AND<infer Pat> ? Sanitized<Pat> : Val extends OR<infer Arg> ? Sanitized<Arg[number]> : Val extends NOT<infer Arg> ? Exclude<Inp, Sanitized<Arg>> : Val // This cannot be done with a single combinator infer as of 12.03.2023.
+type ParseIfCombinator<Val extends Prim> = Val extends AND<infer Pat> ? Sanitized<Pat> : Val extends OR<infer Arg> ? Sanitized<Arg[number]> : Val extends NOT<infer Arg> ? Exclude<Inp, Sanitized<Arg>> : Val extends CONST<infer Arg> ? Arg : Val // This cannot be done with a single combinator infer as of 12.03.2023.
 type ParseVal<Val extends Prim> = Val extends ((...a: unknown[]) => unknown) ? ReturnType<Val> : Val extends typeof Number ? number : Val extends typeof String ? string : Val extends typeof Boolean ? boolean : ParseIfCombinator<Val>
 type ParseValOb<Ob extends {[key in string]: Prim}> = {[key in keyof Ob]: ParseVal<Ob[key]>}
 
