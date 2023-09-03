@@ -6,8 +6,13 @@ export async function polyfill() {
 }
 
 
+function isConstructor(f: Function) {
+  return f.prototype !== undefined
+}
 
-type Prim<InputParam = unknown> = string | typeof String | number | typeof Number | boolean | typeof Boolean | ((input: InputParam) => unknown) | Matcher | typeof Object
+
+type PrimWithDefault = string | number | boolean
+type Prim<InputParam = unknown> = typeof String | typeof Number | typeof Boolean | ((input: InputParam) => unknown) | Matcher | typeof Object | {new(...a:any[]): unknown} | typeof Function | PrimWithDefault
 type Obj = { [key: string]: Prim | Obj }
 type Pattern = Prim | Obj
 
@@ -19,6 +24,17 @@ type Inp = InpPrim | InpObj
 abstract class Matcher {
   abstract matches(input: unknown): unknown
 }
+
+
+
+export class AWAITED<Pat extends Pattern> extends Matcher {
+  constructor(private pattern: Pat) {super()}
+  matches(input: unknown): unknown {
+    sanitizeRec(Promise)(input)
+    return (input as Promise<any>).then((input) => sanitizeRec(this.pattern)(input))
+  }
+}
+
 
 export class CONST<MyPattern extends string | number | boolean> extends Matcher {
   constructor(private constVal: MyPattern) {super()}
@@ -128,11 +144,11 @@ function sanitize<Pat extends Pattern>(pattern: Pat) {
   knownPatternObjects = new WeakMap()
   const out = sanitizeRec(pattern)
   knownPatternObjects = null
-  return (input: Inputified<Pat>) => {
+  return (input: Sanitized<Pat>): Sanitized<Pat> => {
     knownInputObjects = new WeakMap()
     const out2 = out(input)
     knownInputObjects = null
-    return out2
+    return out2 as Sanitized<Pat>
   }
 }
 
@@ -148,6 +164,10 @@ function sanitizeRec<Pat extends Pattern>(pattern: Pat) {
   else if (pattern === String) against = againstPrimitive("string")
   else if (pattern === Number) against = againstPrimitive("number")
   else if (pattern === Boolean) against = againstPrimitive("boolean")
+  else if (pattern === Function) against = (input) => {
+    if (!(input instanceof Function)) throw new Error('Input is not a function')
+    return input
+  }
   else if (pattern instanceof Matcher) {
     if (pattern instanceof Combinator) pattern.sanis = pattern.patterns.map((input) => sanitizeRec(input))
     against = pattern.matches.bind(pattern)
@@ -157,7 +177,13 @@ function sanitizeRec<Pat extends Pattern>(pattern: Pat) {
     return input
   }
   // It is important that this check is after all the constructor checks like if (input === Boolean)
-  else if (pattern instanceof Function) against = pattern as any
+  else if (pattern instanceof Function) {
+    if (isConstructor(pattern)) against = (input) => {
+      if (!(input instanceof pattern)) throw new Error(`Input is not an instance of ${pattern.name}`)
+      return input
+    }
+    else against = pattern as any
+  }
   else if (typeof pattern === "object" && pattern !== null) {
     if (knownPatternObjects.has(pattern)) return knownPatternObjects.get(pattern) 
 
@@ -200,7 +226,7 @@ function sanitizeRec<Pat extends Pattern>(pattern: Pat) {
 
   
 
-  return against as (input: Inputified<Pat>) => Sanitized<Pat>
+  return against as (input: Sanitized<Pat>) => Sanitized<Pat>
 }
 
 
@@ -216,9 +242,11 @@ type EscapeAndFilterQuestionmarkProps<Ob> = {[key in keyof Ob as (key extends st
 type EscapeQuestionmarkProps<Ob> = {[key in keyof Ob as key extends string ? EscapeQuestionmarkKey<key> : key]: Ob[key]}
 
 
-type ParseIfCombinator<Val extends Prim> = Val extends AND<infer Pat> ? Sanitized<Pat> : Val extends OR<infer Arg> ? Sanitized<Arg[number]> : Val extends NOT<infer Arg> ? Exclude<Inp, Sanitized<Arg>> : Val extends CONST<infer Arg> ? Arg : Val // This cannot be done with a single combinator infer as of 12.03.2023.
-type ParseVal<Val extends Prim> = Val extends ((...a: unknown[]) => unknown) ? ReturnType<Val> : Val extends typeof Number ? number : Val extends typeof String ? string : Val extends typeof Boolean ? boolean : ParseIfCombinator<Val>
-type ParseValOb<Ob extends {[key in string]: Prim}> = {[key in keyof Ob]: ParseVal<Ob[key]>}
+
+type ParseIfCombinator<Val extends Prim> = Val extends AND<infer Pat> ? Sanitized<Pat> : Val extends OR<infer Arg> ? Sanitized<Arg[number]> : Val extends NOT<infer Arg> ? Exclude<Inp, Sanitized<Arg>> : Val extends CONST<infer Arg> ? Arg : Val extends AWAITED<infer Arg> ? Promise<Sanitized<Arg> extends Promise<any> ? Awaited<Sanitized<Arg>> : Sanitized<Arg>> : Val // This cannot be done with a single combinator infer as of 12.03.2023.
+type ParseVal<Val extends Prim> = Val extends ((...a: unknown[]) => unknown) ? ReturnType<Val> : Val extends typeof Number ? number : Val extends typeof String ? string : Val extends typeof Boolean ? boolean : Val extends Matcher ? ParseIfCombinator<Val> : Val extends {new(...a:any[]): infer I} ? I : Val extends number ? number : Val extends string ? string : Val extends boolean ? boolean : Val
+type ParseValOb<Ob extends {[key in string]: Prim}> = RemovePropsByValue<{[key in keyof Ob]: Ob[key] extends PrimWithDefault ? never : ParseVal<Ob[key]>}, never> & RemovePropsByValue<{[key in keyof Ob]?: Ob[key] extends PrimWithDefault ? Ob[key] : never}, never>
+
 
 type SanitizeNotNestedOb<Ob extends {[key in string]: unknown}> = ParseValOb<PartiallyOptional<EscapeQuestionmarkProps<Ob>, keyof EscapeQuestionmarkProps<Ob> & keyof EscapeAndFilterQuestionmarkProps<Ob>>>
 type SanitizeNestedOb<Ob extends {[key in string]: unknown}> = {[key in keyof SanitizeNotNestedOb<Ob>]: SanitizeNotNestedOb<Ob>[key] extends {[key in string]: unknown} ? SanitizeNotNestedOb<SanitizeNotNestedOb<Ob>[key]> : SanitizeNotNestedOb<Ob>[key]}
@@ -226,9 +254,9 @@ type SanitizeNestedOb<Ob extends {[key in string]: unknown}> = {[key in keyof Sa
 type Sanitized<Ob extends Pattern> = Ob extends Prim ? ParseVal<Ob> : Ob extends {[key in string]: unknown} ? SanitizeNestedOb<Ob> : never
 
 
-type Inputified<Ob extends Pattern> = Sanitized<Ob>
-
-
+type RemovePropsByValue<T, V> = {
+  [K in keyof T as T[K] extends V ? never : K]: T[K];
+};
 
 
 export default sanitize
