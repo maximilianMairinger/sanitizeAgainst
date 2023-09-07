@@ -22,16 +22,32 @@ type Inp = InpPrim | InpObj
 
 
 abstract class Matcher {
+  init?(): void
   abstract matches(input: unknown): unknown
 }
 
 
 
 export class AWAITED<Pat extends Pattern> extends Matcher {
-  constructor(private pattern: Pat) {super()}
+  private sani: Function
+  constructor(private _pattern: Pat) {
+    super()
+  }
+  init() {
+    this.sani = sanitizeRec(this.pattern)
+  }
+  private get pattern(): Pat {
+    return this._pattern instanceof AWAITED ? this._pattern.pattern : this._pattern
+  }
   matches(input: unknown): unknown {
     sanitizeRec(Promise)(input)
-    return (input as Promise<any>).then((input) => sanitizeRec(this.pattern)(input))
+    const myKnownInputObjects = knownInputObjects
+    return (input as Promise<any>).then((input) => {
+      knownInputObjects = myKnownInputObjects
+      const r = this.sani(input)
+      knownInputObjects = null
+      return r
+    })
   }
 }
 
@@ -169,6 +185,7 @@ function sanitizeRec<Pat extends Pattern>(pattern: Pat) {
     return input
   }
   else if (pattern instanceof Matcher) {
+    if (pattern.init) pattern.init()
     if (pattern instanceof Combinator) pattern.sanis = pattern.patterns.map((input) => sanitizeRec(input))
     against = pattern.matches.bind(pattern)
   }

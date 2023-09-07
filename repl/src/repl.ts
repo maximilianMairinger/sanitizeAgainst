@@ -3,15 +3,9 @@ import { expect } from "./mockJest"
 
 
 
+(async () => {
+    // const a = sani(URL)
 
-const ob = {lel: new Promise<number>((res) => {
-    setTimeout(() => {
-        res("5")
-    }, 1000)
-})}
-
-let lel = sani({lel: new AWAITED(2), kek: 2, "qwe?": String})(ob)
-
-
-
-
+    // expect(a(new URL("https://www.google.com"))).toBeInstanceOf(URL)
+    // expect(() => a(2))
+})()

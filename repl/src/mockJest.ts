@@ -17,6 +17,9 @@ export const expect = (exp: any) => ({
       throw new Error()
     }
   },
+  toBeInstanceOf: (cls: any) => {
+    if (!(exp instanceof cls)) throw new Error(`Expected ${exp} to be instance of ${cls}`)
+  },
   toThrow: () => {
     let pass = false
     try {

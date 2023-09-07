@@ -1,4 +1,4 @@
-import sani, { AND, OR, NOT } from "../../app/src/sanitizeAgainst"
+import sani, { AND, OR, NOT, AWAITED } from "../../app/src/sanitizeAgainst"
 import "./extend"
 
 
@@ -690,6 +690,128 @@ describe("core", () => {
 
     let o = {}
     expect(o.__proto__).eq(Object.prototype)
+  })
+
+
+  describe("Awaited", () => {
+    test("Basic usage", async () => {
+      expect.assertions(3)
+      const a = sani(new AWAITED(Number))
+
+      expect(a(Promise.resolve(2))).toBeInstanceOf(Promise)
+      expect(await a(Promise.resolve(2))).eq(2)
+      expect(await a(new Promise((res) => {
+        setTimeout(() => {
+          res(3)
+        }, 10)
+      }))).eq(3)
+
+      
+    })
+
+    test("Catch basic error", async () => {
+      const a = sani(new AWAITED(Number))
+      expect.assertions(2)
+
+      await expect(async () => await a(Promise.resolve("asd"))).rejects.toThrow()
+      await expect(async () => await a(new Promise((res) => {
+        setTimeout(() => {
+          res("asd")
+        }, 10)
+      }))).rejects.toThrow()
+    })
+
+
+    test("Catch rejected error", async () => {
+      const a = sani(new AWAITED(Number))
+      expect.assertions(4)
+
+      await expect(async () => await a(Promise.reject(new Error(2)))).rejects.toThrow()
+      await expect(async () => await a(Promise.reject(new Error("asd")))).rejects.toThrow()
+      await expect(async () => await a(new Promise((res, rej) => {
+        setTimeout(() => {
+          rej(new Error(2))
+        }, 10)
+      }))).rejects.toThrow()
+      await expect(async () => await a(new Promise((res, rej) => {
+        setTimeout(() => {
+          rej(new Error("asd"))
+        }, 10)
+      }))).rejects.toThrow()
+    })
+
+    test("Nested Awaited", async () => {
+      const a = sani(new AWAITED(new AWAITED(String)))
+      expect.assertions(4)
+
+      await expect(async () => await a(Promise.resolve(Promise.resolve(2)))).rejects.toThrow()
+      await expect(async () => await a(Promise.resolve(2))).rejects.toThrow()
+      expect(await a(Promise.resolve("asd"))).toEqual("asd")
+      expect(await a(Promise.resolve(Promise.resolve("asd")))).toEqual("asd")
+    })
+
+    test("Awaited in object", async () => {
+      const a = sani({
+        test: new AWAITED(Number)
+      })
+      expect.assertions(3)
+
+      expect(a({test: Promise.resolve(2)})).toBeInstanceOf(Object)
+      expect(a({test: Promise.resolve(2)}).test).toBeInstanceOf(Promise)
+      await expect(async () => await a({test: Promise.resolve("asd")}).test).rejects.toThrow()
+    })
+
+    test("Awaited in object in awaited", async () => {
+      const a = sani({
+        test: new AWAITED({
+          test2: new AWAITED(Number)
+        })
+      })
+      expect.assertions(2)
+
+      expect(await (await a({test: Promise.resolve({test2: Promise.resolve(2)})}).test).test2).eq(2)
+      await expect(async () => await (await a({test: Promise.resolve({test2: Promise.resolve("asd")})}).test).test2).rejects.toThrow()
+    })
+
+  })
+
+
+  describe("Arbitrary instanceof check", () => {
+    test("Promise usage", () => {
+      const a = sani(Promise)
+      expect.assertions(2)
+
+      expect(a(Promise.resolve(2))).toBeInstanceOf(Promise)
+      expect(() => a(2)).toThrow()
+    })
+
+    test("Array usage", () => {
+      const a = sani(Array)
+      expect.assertions(3)
+
+      expect(a([])).toBeInstanceOf(Array)
+      expect(() => a(2)).toThrow()
+      expect(() => a({})).toThrow()
+    })
+
+    test("Object usage", () => {
+      const a = sani(Object)
+      expect.assertions(2)
+
+      expect(a({})).toBeInstanceOf(Object)
+      expect(() => a(2)).toThrow()
+    })
+
+    test("Custom class usage", () => {
+      class Custom {}
+      const a = sani(Custom)
+      expect.assertions(2)
+
+      expect(a(new Custom())).toBeInstanceOf(Custom)
+      expect(() => a(2)).toThrow()
+    })
+
+
   })
 
 
