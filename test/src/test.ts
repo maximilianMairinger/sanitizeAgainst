@@ -305,6 +305,35 @@ describe("core", () => {
       expect(() => against(false)).toThrow()
       expect(() => against(true)).toThrow()
     })
+
+    describe("Combinator with awaited", () => {
+      test("Or with one awaited", async () => {
+        let against = sani(new OR(new AWAITED(Number), String))
+        expect.assertions(4)
+
+        expect(await against(Promise.resolve(3))).eq(3)
+        expect(async () => await against(4)).rejects.toThrow()
+        expect(async () => await against(Promise.resolve("qwe"))).rejects.toThrow()
+        expect(await against("asd")).eq("asd")
+      })
+
+      test("Or with two awaited", async () => {
+        let against = sani(new OR(new AWAITED(Number), new AWAITED(String)))
+
+        expect.assertions(6)
+
+        expect(await against(Promise.resolve(3))).eq(3)
+        expect(await against(Promise.resolve("qwe"))).eq("qwe")
+        expect(async () => await against(Promise.resolve(false))).rejects.toThrow()
+        expect(async () => await against(Promise.resolve(false))).rejects.toThrow()
+        expect(async () => await against(4)).rejects.toThrow()
+        expect(async () => await against("asd")).rejects.toThrow()
+      })
+
+      test("And with awaited", async () => {
+
+      })
+    })
   })
 
   

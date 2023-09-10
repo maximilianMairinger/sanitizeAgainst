@@ -29,7 +29,7 @@ abstract class Matcher {
 
 
 export class AWAITED<Pat extends Pattern> extends Matcher {
-  private sani: Function
+  public sani: Function
   constructor(private _pattern: Pat) {
     super()
   }
@@ -66,6 +66,9 @@ export class CONST<MyPattern extends string | number | boolean> extends Matcher 
 abstract class Combinator extends Matcher {
   patterns: Pattern[]
   sanis: Function[] // this gets generated in the recSanitize function
+  init() {
+    this.sanis = this.patterns.map((a) => sanitizeRec(a))
+  }
 }
 
 
@@ -73,7 +76,6 @@ abstract class BooleanCombinator extends Combinator {
   constructor(...inputs: any[]) {
     super()
     this.patterns = inputs
-    // this.ar = ar.map((a) => sanitizeRec(a))
   }
 }
 
@@ -93,20 +95,46 @@ export class AND<Pat extends Pattern> extends BooleanCombinator {
   }
 }
 
+const fromInstanceSym = Symbol("fromInstance")
+
 export class OR<Arg extends Pattern[], Pat extends Arg[number] = Arg[number]> extends BooleanCombinator {
   // We need these props to make OR and AND unique types so we can check for them in the conditional type of ParseIfCombinator. Otherwise the first check would include both or something and not work.
   private isOrComb: any
+  private awaitedSanis: AWAITED<any>[]
+  private nonAwaitedSanis: Function[]
   constructor(...ar: Arg) {
     super(...ar)
   }
+  init() {
+    super.init()
+    this.awaitedSanis = this.sanis.filter((a) => a[fromInstanceSym] instanceof AWAITED).map((a) => a[fromInstanceSym])
+    this.nonAwaitedSanis = this.sanis.filter((a) => !(a[fromInstanceSym] instanceof AWAITED))
+  }
   matches(input: unknown) {
-    for (const a of this.sanis) {
+    for (const a of this.nonAwaitedSanis) {
       try {
-        return a(input)
+        const r = a(input)
+        return this.awaitedSanis.length === 0 ? r : Promise.resolve(r)
       } catch (e) {}
+    }
+    if (this.awaitedSanis.length !== 0 && input instanceof Promise) {
+      const myKnownInputObjects = knownInputObjects
+      return input.then((input) => {
+        knownInputObjects = myKnownInputObjects
+        for (const a of this.awaitedSanis) {
+          try {
+            const r = a.sani(input)
+            knownInputObjects = null
+            return r
+          }
+          catch(e) {}
+        }
+        throw new Error("No match")
+      })
     }
     throw new Error("No match")
   }
+
 }
 
 export class NOT<Arg extends Pattern = Pattern, Pat extends Exclude<Pattern, Arg> = Exclude<Pattern, Arg>> extends Combinator {
@@ -160,11 +188,11 @@ function sanitize<Pat extends Pattern>(pattern: Pat) {
   knownPatternObjects = new WeakMap()
   const out = sanitizeRec(pattern)
   knownPatternObjects = null
-  return (input: Sanitized<Pat>): Sanitized<Pat> => {
+  return (input: Sanitized<Pat, false>): Sanitized<Pat, true> => {
     knownInputObjects = new WeakMap()
     const out2 = out(input)
     knownInputObjects = null
-    return out2 as Sanitized<Pat>
+    return out2 as Sanitized<Pat, true>
   }
 }
 
@@ -186,8 +214,8 @@ function sanitizeRec<Pat extends Pattern>(pattern: Pat) {
   }
   else if (pattern instanceof Matcher) {
     if (pattern.init) pattern.init()
-    if (pattern instanceof Combinator) pattern.sanis = pattern.patterns.map((input) => sanitizeRec(input))
     against = pattern.matches.bind(pattern)
+    against[fromInstanceSym] = pattern
   }
   else if (pattern === Object) against = (input) => {
     if (typeof input !== "object" || input === null || input instanceof Array) throw new Error('Input is not an object')
@@ -243,7 +271,7 @@ function sanitizeRec<Pat extends Pattern>(pattern: Pat) {
 
   
 
-  return against as (input: Sanitized<Pat>) => Sanitized<Pat>
+  return against as (input: Sanitized<Pat, false>) => Sanitized<Pat, true>
 }
 
 
@@ -260,15 +288,15 @@ type EscapeQuestionmarkProps<Ob> = {[key in keyof Ob as key extends string ? Esc
 
 
 
-type ParseIfCombinator<Val extends Prim> = Val extends AND<infer Pat> ? Sanitized<Pat> : Val extends OR<infer Arg> ? Sanitized<Arg[number]> : Val extends NOT<infer Arg> ? Exclude<Inp, Sanitized<Arg>> : Val extends CONST<infer Arg> ? Arg : Val extends AWAITED<infer Arg> ? Promise<Sanitized<Arg> extends Promise<any> ? Awaited<Sanitized<Arg>> : Sanitized<Arg>> : Val // This cannot be done with a single combinator infer as of 12.03.2023.
-type ParseVal<Val extends Prim> = Val extends ((...a: unknown[]) => unknown) ? ReturnType<Val> : Val extends typeof Number ? number : Val extends typeof String ? string : Val extends typeof Boolean ? boolean : Val extends Matcher ? ParseIfCombinator<Val> : Val extends {new(...a:any[]): infer I} ? I : Val extends number ? number : Val extends string ? string : Val extends boolean ? boolean : Val
-type ParseValOb<Ob extends {[key in string]: Prim}> = RemovePropsByValue<{[key in keyof Ob]: Ob[key] extends PrimWithDefault ? never : ParseVal<Ob[key]>}, never> & RemovePropsByValue<{[key in keyof Ob]?: Ob[key] extends PrimWithDefault ? Ob[key] : never}, never>
+type ParseIfCombinator<Val extends Prim, Output extends boolean> = Val extends AND<infer Pat> ? Sanitized<Pat> : Val extends OR<infer Arg> ? AWAITED<any> extends Arg[number] ? Output extends true ? Promise<Awaited<Sanitized<Arg[number]>>> : Sanitized<Arg[number]> : Sanitized<Arg[number]> : Val extends NOT<infer Arg> ? Exclude<Inp, Sanitized<Arg>> : Val extends CONST<infer Arg> ? Arg : Val extends AWAITED<infer Arg> ? Promise<Sanitized<Arg> extends Promise<any> ? Awaited<Sanitized<Arg>> : Sanitized<Arg>> : Val // This cannot be done with a single combinator infer as of 12.03.2023.
+type ParseVal<Val extends Prim, Output extends boolean> = Val extends ((...a: unknown[]) => unknown) ? ReturnType<Val> : Val extends typeof Number ? number : Val extends typeof String ? string : Val extends typeof Boolean ? boolean : Val extends Matcher ? ParseIfCombinator<Val, Output> : Val extends {new(...a:any[]): infer I} ? I : Val extends number ? number : Val extends string ? string : Val extends boolean ? boolean : Val
+type ParseValOb<Ob extends {[key in string]: Prim}, Output extends boolean> = RemovePropsByValue<{[key in keyof Ob]: Ob[key] extends PrimWithDefault ? never : ParseVal<Ob[key], Output>}, never> & RemovePropsByValue<{[key in keyof Ob]?: Ob[key] extends PrimWithDefault ? Ob[key] : never}, never>
 
 
-type SanitizeNotNestedOb<Ob extends {[key in string]: unknown}> = ParseValOb<PartiallyOptional<EscapeQuestionmarkProps<Ob>, keyof EscapeQuestionmarkProps<Ob> & keyof EscapeAndFilterQuestionmarkProps<Ob>>>
-type SanitizeNestedOb<Ob extends {[key in string]: unknown}> = {[key in keyof SanitizeNotNestedOb<Ob>]: SanitizeNotNestedOb<Ob>[key] extends {[key in string]: unknown} ? SanitizeNotNestedOb<SanitizeNotNestedOb<Ob>[key]> : SanitizeNotNestedOb<Ob>[key]}
+type SanitizeNotNestedOb<Ob extends {[key in string]: unknown}, Output extends boolean> = ParseValOb<PartiallyOptional<EscapeQuestionmarkProps<Ob>, keyof EscapeQuestionmarkProps<Ob> & keyof EscapeAndFilterQuestionmarkProps<Ob>>, Output>
+type SanitizeNestedOb<Ob extends {[key in string]: unknown}, Output extends boolean> = {[key in keyof SanitizeNotNestedOb<Ob, Output>]: SanitizeNotNestedOb<Ob, Output>[key] extends {[key in string]: unknown} ? SanitizeNotNestedOb<SanitizeNotNestedOb<Ob, Output>[key], Output> : SanitizeNotNestedOb<Ob, Output>[key]}
 
-type Sanitized<Ob extends Pattern> = Ob extends Prim ? ParseVal<Ob> : Ob extends {[key in string]: unknown} ? SanitizeNestedOb<Ob> : never
+type Sanitized<Ob extends Pattern, Output extends boolean = true> = Ob extends Prim ? ParseVal<Ob, Output> : Ob extends {[key in string]: unknown} ? SanitizeNestedOb<Ob, Output> : never
 
 
 type RemovePropsByValue<T, V> = {
@@ -278,4 +306,6 @@ type RemovePropsByValue<T, V> = {
 
 export default sanitize
 
+
+type EEE = Awaited<Promise<number> | string>
 

@@ -4,8 +4,9 @@ import { expect } from "./mockJest"
 
 
 (async () => {
-    // const a = sani(URL)
+    let against = sani(new OR(new AWAITED(Number), String))
 
-    // expect(a(new URL("https://www.google.com"))).toBeInstanceOf(URL)
-    // expect(() => a(2))
+
+
+    let eee = await against(Promise.resolve(2))
 })()
