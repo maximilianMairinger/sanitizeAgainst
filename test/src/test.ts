@@ -307,20 +307,31 @@ describe("core", () => {
     })
 
     describe("Combinator with awaited", () => {
-      test("Or with one awaited", async () => {
+      test("Or with one awaited 1", async () => {
         let against = sani(new OR(new AWAITED(Number), String))
-        expect.assertions(4)
 
+        expect(against(Promise.resolve(3))).toBeInstanceOf(Promise)
+        expect(against("asd")).toBeInstanceOf(Promise)
         expect(await against(Promise.resolve(3))).eq(3)
         expect(async () => await against(4)).rejects.toThrow()
         expect(async () => await against(Promise.resolve("qwe"))).rejects.toThrow()
         expect(await against("asd")).eq("asd")
       })
 
+      test("Or with one awaited 2", async () => {
+        let against = sani(new OR(String, new AWAITED(Number)))
+
+        expect(against(Promise.resolve(3))).toBeInstanceOf(Promise)
+        expect(against("asd")).toBeInstanceOf(Promise)
+        expect(await against(Promise.resolve(3))).eq(3)
+        expect(async () => await against(4)).rejects.toThrow()
+        expect(async () => await against(Promise.resolve("qwe"))).rejects.toThrow()
+        expect(await against("asd")).eq("asd")
+      })
+
+
       test("Or with two awaited", async () => {
         let against = sani(new OR(new AWAITED(Number), new AWAITED(String)))
-
-        expect.assertions(6)
 
         expect(await against(Promise.resolve(3))).eq(3)
         expect(await against(Promise.resolve("qwe"))).eq("qwe")
@@ -329,9 +340,22 @@ describe("core", () => {
         expect(async () => await against(4)).rejects.toThrow()
         expect(async () => await against("asd")).rejects.toThrow()
       })
+    })
+    
+    describe("Combinator with arbitrary instance of", () => {
+      test("And", async () => {
+        const against1 = sani(new AND(Promise, (p) => p.then((e) => e + 1)))
+        
+        expect(against1(Promise.resolve(2))).toBeInstanceOf(Promise)
+        expect(await against1(Promise.resolve(2))).eq(3)
+        expect(await against1(Promise.resolve(3))).eq(4)
+        expect(() => against1(2)).toThrow()
+        expect(() => against1("asd")).toThrow()
 
-      test("And with awaited", async () => {
-
+        const against2 = sani(new AND(Promise, (p) => p.then((e) => {if (e !== "") throw new Error()})))
+        expect(against2(Promise.resolve(""))).toBeInstanceOf(Promise)
+        expect(await against2(Promise.resolve(""))).eq(undefined)
+        expect(async () => await against2(Promise.resolve("asd"))).rejects.toThrow()
       })
     })
   })

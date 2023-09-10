@@ -27,7 +27,7 @@ abstract class Matcher {
 }
 
 
-
+const isPromiseSani = sanitizeRec(Promise)
 export class AWAITED<Pat extends Pattern> extends Matcher {
   public sani: Function
   constructor(private _pattern: Pat) {
@@ -40,7 +40,7 @@ export class AWAITED<Pat extends Pattern> extends Matcher {
     return this._pattern instanceof AWAITED ? this._pattern.pattern : this._pattern
   }
   matches(input: unknown): unknown {
-    sanitizeRec(Promise)(input)
+    isPromiseSani(input)
     const myKnownInputObjects = knownInputObjects
     return (input as Promise<any>).then((input) => {
       knownInputObjects = myKnownInputObjects
