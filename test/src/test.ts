@@ -1,4 +1,4 @@
-import sani, { AND, OR, NOT, AWAITED } from "../../app/src/sanitizeAgainst"
+import sani, { AND, OR, NOT, AWAITED, OBJECT, ensure, stringStartsWith, numberLikeStringPattern } from "../../app/src/sanitizeAgainst"
 import "./extend"
 
 
@@ -867,6 +867,85 @@ describe("core", () => {
 
   })
 
+
+  describe("Mapped object", () => {
+    test("Basic usage", () => {
+      const against = sani(new OBJECT(Number))
+
+      expect(against({lel: 2, qwe: 3, hasdh: 212321})).eq({lel: 2, qwe: 3, hasdh: 212321})
+      expect(() => against({lel: 2, qwe: 3, hasdh: 212321, lelS: "qwe"})).toThrow()
+      expect(() => against({lelS: "2"})).toThrow()
+      expect(against({})).eq({})
+    })
+
+    test("Key usage", () => {
+      const against = sani(new OBJECT(Boolean, new AND(String, ensure((s) => s.startsWith("lel"))) as any as (a: any) => `lel${string}`))
+
+      expect(against({lel: false, lel2: false, lel3: true})).eq({lel: false, lel2: false, lel3: true})
+      expect(() => against({lel: false, le2: false, lel3: true})).toThrow()
+      expect(() => against({lel: false, lel2: "false", lel3: true})).toThrow()
+
+    })
+
+    test("startsWithStringUsage key usage", () => {
+      const against = sani(new OBJECT(Boolean, stringStartsWith("lel")))
+
+      expect(against({lel: false, lel2: false, lel3: true})).eq({lel: false, lel2: false, lel3: true})
+      expect(() => against({lel: false, le2: false, lel3: true})).toThrow()
+      expect(() => against({lel: false, lel2: "false", lel3: true})).toThrow()
+    })
+
+    test("Numberlike key usage", () => {
+      const against = sani(new OBJECT(Boolean, numberLikeStringPattern))
+
+      expect(against({1: false, 2: false, 3: true})).eq({1: false, 2: false, 3: true})
+      expect(() => against({1: false, 2: "false", 3: true})).toThrow()
+      expect(() => against({"a": false, 2: false, 3: true})).toThrow()
+      expect(against({})).eq({})
+
+
+      expect(against({"1": false, "2": false, "3": true})).eq({1: false, 2: false, 3: true})
+      expect(() => against({"1": false, "2": "false", "3": true})).toThrow()
+      expect(() => against({"a": false, "2": false, "3": true})).toThrow()
+
+    })
+
+    test("prototype poisoning protection", () => {
+      const against = sani(new OBJECT(Boolean, stringStartsWith("lel")))
+
+      const input1 = Object.create(null)
+      input1.lel1 = false
+      input1.__proto__ = {lel123: false}
+
+      expect(against(input1)).eq({lel1: false})
+      expect(against(input1).lel123).eq(undefined)
+      expect("lel123" in against(input1)).eq(false)
+    })
+
+  })
+
+
+  test("Ensure helper function", () => {
+    const e = ensure((s: string) => s.startsWith("lel"))
+
+    expect(e("lel")).eq("lel")
+    expect(e("lel2")).eq("lel2")
+    expect(() => e("qwe")).toThrow()
+    expect(() => e(2)).toThrow()
+    expect(() => e({})).toThrow()
+
+    const e2 = ensure((s: string) => s.startsWith("lel2"), "Must start with lel2")
+
+    expect(e2("lel2")).eq("lel2")
+    expect(() => e2("lel")).toThrow()
+  })
+
+  test("stringStartsWith helper function", () => {
+    const e = stringStartsWith("lel2")
+
+    expect(e("lel2")).eq("lel2")
+    expect(() => e("lel")).toThrow()
+  })
 
 })
 

@@ -16,9 +16,11 @@ export const expect = (exp: any) => ({
       console.error("Expected", exp, "to be deeply equal to", got)
       throw new Error()
     }
+    else console.log("Passed")
   },
   toBeInstanceOf: (cls: any) => {
     if (!(exp instanceof cls)) throw new Error(`Expected ${exp} to be instance of ${cls}`)
+    else console.log("Passed")
   },
   toThrow: () => {
     let pass = false
@@ -29,5 +31,6 @@ export const expect = (exp: any) => ({
       pass = true
     }
     if (!pass) throw new Error(`Expected ${exp} to throw`)
+    else console.log("Passed")
   }
 })

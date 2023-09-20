@@ -21,14 +21,46 @@ type InpObj = { [key: string]: InpPrim | InpObj }
 type Inp = InpPrim | InpObj
 
 
+const fromInstanceSym = Symbol("fromInstance")
+
 abstract class Matcher {
   init?(): void
   abstract matches(input: unknown): unknown
+  abstract [fromInstanceSym]: string
 }
 
+type PossibleKeyPatterns = Pattern & (((key: string) => string) | Combinator | CONST<any> | typeof String | AND<(a: any) => (string | number)>)
+
+
+
+const isObjectSani = sanitizeRec(Object)
+export class OBJECT<ValuePattern extends Pattern, KeyPattern extends PossibleKeyPatterns> extends Matcher {
+  get [fromInstanceSym]() {return "OBJECT"}
+  private saniValue: Function
+  private saniKey: Function
+  constructor(private valuePattern: ValuePattern, private keyPattern: KeyPattern = (a => a) as any) {
+    super()
+  }
+  init() {
+    this.saniKey = sanitizeRec(this.keyPattern)
+    this.saniValue = sanitizeRec(this.valuePattern)
+  }
+  matches(input: unknown): unknown {
+    isObjectSani(input)
+    if (knownInputObjects.has(input as any)) return knownInputObjects.get(input as any)
+    const out = {}
+    knownInputObjects.set(input as any, out)
+    for (const key in input as any) {
+      if (out[key] !== undefined) continue // prototype poisoning protection
+      out[this.saniKey(key)] = this.saniValue(input[key])
+    }
+    return out
+  }
+}
 
 const isPromiseSani = sanitizeRec(Promise)
 export class AWAITED<Pat extends Pattern> extends Matcher {
+  get [fromInstanceSym]() {return "AWAITED"}
   public sani: Function
   constructor(private _pattern: Pat) {
     super()
@@ -53,6 +85,7 @@ export class AWAITED<Pat extends Pattern> extends Matcher {
 
 
 export class CONST<MyPattern extends string | number | boolean> extends Matcher {
+  get [fromInstanceSym]() {return "CONST"}
   constructor(private constVal: MyPattern) {super()}
   matches(input: unknown): unknown {
     if (input !== this.constVal) throw `Expected ${this.constVal}, got ${input}`
@@ -80,10 +113,30 @@ abstract class BooleanCombinator extends Combinator {
 }
 
 
+type FMay<A extends Pattern> = ((f1: A extends (...args: any) => any ? Sanitized<ReturnType<A>> : Sanitized<A>) => any)
 
-export class AND<Pat extends Pattern> extends BooleanCombinator {
-  private isAndComb: any
-  constructor(...ar: [...Pattern[], Pat]) {
+
+
+export class AND<R, A1 extends Pattern = any, A1Hint extends Pattern = any, A2 extends Pattern = any, A3 extends Pattern = any, A4 extends Pattern = any, A5 extends Pattern = any, A6 extends Pattern = any, A7 extends Pattern = any, A8 extends Pattern = any, A9 extends Pattern = any, A10 extends Pattern = any> extends BooleanCombinator {
+  private isAnd: any
+  get [fromInstanceSym]() {return "AND"}
+  
+
+
+  constructor(f1: (A1 | ((a: Sanitized<A1Hint>) => any)) & R)
+  constructor(f1: A1 | ((a: Sanitized<A1Hint>) => any), f2: (A2 | FMay<A1>) & R)
+  constructor(f1: A1 | ((a: Sanitized<A1Hint>) => any), f2: A2 | FMay<A1>, f3: (A3 | FMay<A2>) & R)
+  constructor(f1: A1 | ((a: Sanitized<A1Hint>) => any), f2: A2 | FMay<A1>, f3: A3 | FMay<A2>, f4: (A4 | FMay<A3>) & R)
+  constructor(f1: A1 | ((a: Sanitized<A1Hint>) => any), f2: A2 | FMay<A1>, f3: A3 | FMay<A2>, f4: A4 | FMay<A3>, f5: (A5 | FMay<A4>) & R)
+  constructor(f1: A1 | ((a: Sanitized<A1Hint>) => any), f2: A2 | FMay<A1>, f3: A3 | FMay<A2>, f4: A4 | FMay<A3>, f5: A5 | FMay<A4>, f6: (A6 | FMay<A5>) & R)
+  constructor(f1: A1 | ((a: Sanitized<A1Hint>) => any), f2: A2 | FMay<A1>, f3: A3 | FMay<A2>, f4: A4 | FMay<A3>, f5: A5 | FMay<A4>, f6: A6 | FMay<A5>, f7: (A7 | FMay<A6>) & R)
+  constructor(f1: A1 | ((a: Sanitized<A1Hint>) => any), f2: A2 | FMay<A1>, f3: A3 | FMay<A2>, f4: A4 | FMay<A3>, f5: A5 | FMay<A4>, f6: A6 | FMay<A5>, f7: A7 | FMay<A6>, f8: (A8 | FMay<A7>) & R)
+  constructor(f1: A1 | ((a: Sanitized<A1Hint>) => any), f2: A2 | FMay<A1>, f3: A3 | FMay<A2>, f4: A4 | FMay<A3>, f5: A5 | FMay<A4>, f6: A6 | FMay<A5>, f7: A7 | FMay<A6>, f8: A8 | FMay<A7>, f9: (A9 | FMay<A8>) & R)
+  constructor(f1: A1 | ((a: Sanitized<A1Hint>) => any), f2: A2 | FMay<A1>, f3: A3 | FMay<A2>, f4: A4 | FMay<A3>, f5: A5 | FMay<A4>, f6: A6 | FMay<A5>, f7: A7 | FMay<A6>, f8: A8 | FMay<A7>, f9: A9 | FMay<A8>, f10: (A10 | FMay<A9>) & R)
+  
+
+  // constructor(...ar: Pattern[])
+  constructor(...ar: Pattern[]) {
     super(...ar)
   }
   matches(input: unknown) {
@@ -95,11 +148,13 @@ export class AND<Pat extends Pattern> extends BooleanCombinator {
   }
 }
 
-const fromInstanceSym = Symbol("fromInstance")
+
 
 export class OR<Arg extends Pattern[], Pat extends Arg[number] = Arg[number]> extends BooleanCombinator {
-  // We need these props to make OR and AND unique types so we can check for them in the conditional type of ParseIfCombinator. Otherwise the first check would include both or something and not work.
-  private isOrComb: any
+  private isOr: any
+  get [fromInstanceSym]() {return "OR"}
+  
+  
   private awaitedSanis: AWAITED<any>[]
   private nonAwaitedSanis: Function[]
   constructor(...ar: Arg) {
@@ -107,8 +162,8 @@ export class OR<Arg extends Pattern[], Pat extends Arg[number] = Arg[number]> ex
   }
   init() {
     super.init()
-    this.awaitedSanis = this.sanis.filter((a) => a[fromInstanceSym] instanceof AWAITED).map((a) => a[fromInstanceSym])
-    this.nonAwaitedSanis = this.sanis.filter((a) => !(a[fromInstanceSym] instanceof AWAITED))
+    this.awaitedSanis = this.sanis.filter((a) => a[fromInstanceSym] !== undefined && a[fromInstanceSym][fromInstanceSym] === "AWAITED").map((a) => a[fromInstanceSym])
+    this.nonAwaitedSanis = this.sanis.filter((a) => !(a[fromInstanceSym] !== undefined && a[fromInstanceSym][fromInstanceSym] === "AWAITED"))
   }
   matches(input: unknown) {
     for (const a of this.nonAwaitedSanis) {
@@ -134,11 +189,11 @@ export class OR<Arg extends Pattern[], Pat extends Arg[number] = Arg[number]> ex
     }
     throw new Error("No match")
   }
-
 }
 
 export class NOT<Arg extends Pattern = Pattern, Pat extends Exclude<Pattern, Arg> = Exclude<Pattern, Arg>> extends Combinator {
-  private isNOTComb: any
+  private isNot: any
+  get [fromInstanceSym]() {return "NOT"}
   constructor(ar: Arg) {
     super()
     this.patterns = [ar]
@@ -176,10 +231,7 @@ function againstPrimitiveDefault(type: string, defaultVal: unknown) {
 }
 
 function againstPrimitive(type: string) {
-  return (input: unknown) => {
-    if (typeof input === type) return input
-    else throw new Error(`Input is not a ${type}`)
-  }
+  return ensure(input => typeof input === type, `Input is not a ${type}`)
 }
 
 let knownPatternObjects: WeakMap<object, (input: unknown) => unknown>
@@ -260,7 +312,7 @@ function sanitizeRec<Pat extends Pattern>(pattern: Pat) {
         if (Object.hasOwn(input as object, key)) out[key] = nestedAgainst(input[key])
       }
 
-      // do this e.g. for equaals functions. Some implementations (e.g. fast-equals) check constructor for equality
+      // do this e.g. for equals functions. Some implementations (e.g. fast-equals) check constructor for equality
       Object.setPrototypeOf(out, Object.prototype)
       
       return out
@@ -288,8 +340,11 @@ type EscapeQuestionmarkProps<Ob> = {[key in keyof Ob as key extends string ? Esc
 
 
 
-type ParseIfCombinator<Val extends Prim, Output extends boolean> = Val extends AND<infer Pat> ? Sanitized<Pat> : Val extends OR<infer Arg> ? AWAITED<any> extends Arg[number] ? Output extends true ? Promise<Awaited<Sanitized<Arg[number]>>> : Sanitized<Arg[number]> : Sanitized<Arg[number]> : Val extends NOT<infer Arg> ? Exclude<Inp, Sanitized<Arg>> : Val extends CONST<infer Arg> ? Arg : Val extends AWAITED<infer Arg> ? Promise<Sanitized<Arg> extends Promise<any> ? Awaited<Sanitized<Arg>> : Sanitized<Arg>> : Val // This cannot be done with a single combinator infer as of 12.03.2023.
-type ParseVal<Val extends Prim, Output extends boolean> = Val extends ((...a: unknown[]) => unknown) ? ReturnType<Val> : Val extends typeof Number ? number : Val extends typeof String ? string : Val extends typeof Boolean ? boolean : Val extends Matcher ? ParseIfCombinator<Val, Output> : Val extends {new(...a:any[]): infer I} ? I : Val extends number ? number : Val extends string ? string : Val extends boolean ? boolean : Val
+
+
+
+type ParseIfCombinator<Val extends Prim, Output extends boolean> = Val extends AND<infer Out, infer Inp> ? Output extends true ? Out extends Pattern ? Sanitized<Out, Output> : never : Sanitized<Inp, Output> : Val extends OR<infer Arg> ? AWAITED<any> extends Arg[number] ? Output extends true ? Promise<Awaited<Sanitized<Arg[number], Output>>> : Sanitized<Arg[number], Output> : Sanitized<Arg[number], Output> : Val extends NOT<infer Arg> ? Exclude<Inp, Sanitized<Arg, Output>> : Val extends CONST<infer Arg> ? Arg : Val extends AWAITED<infer Arg> ? Promise<Sanitized<Arg, Output> extends Promise<any> ? Awaited<Sanitized<Arg, Output>> : Sanitized<Arg, Output>> : Val extends OBJECT<infer ValArg, infer KeyArg> ? {[key in Sanitized<KeyArg, Output>]: Sanitized<ValArg>} : Val
+type ParseVal<Val extends Prim, Output extends boolean> = Val extends typeof Number ? number : Val extends typeof String ? string : Val extends typeof Boolean ? boolean : Val extends Matcher ? ParseIfCombinator<Val, Output> : Val extends {new(...a:any[]): infer I} ? I : Val extends number ? number : Val extends string ? string : Val extends boolean ? boolean : Val extends ((a: infer Inp) => infer Out) ? Output extends true ? Out : Inp : Val
 type ParseValOb<Ob extends {[key in string]: Prim}, Output extends boolean> = RemovePropsByValue<{[key in keyof Ob]: Ob[key] extends PrimWithDefault ? never : ParseVal<Ob[key], Output>}, never> & RemovePropsByValue<{[key in keyof Ob]?: Ob[key] extends PrimWithDefault ? Ob[key] : never}, never>
 
 
@@ -307,5 +362,28 @@ type RemovePropsByValue<T, V> = {
 export default sanitize
 
 
-type EEE = Awaited<Promise<number> | string>
+
+
+export function ensure<T>(validate: (input: T) => boolean, msg?: string | ((input: T) => string)) {
+  return (input: T) => {
+    if (!validate(input)) throw new Error(msg instanceof Function ? msg(input) : msg)
+    return input
+  }
+}
+
+
+
+
+const errorMsg = "Input must be of type number or a numberlike string, but is " 
+export const numberLikeStringPattern = new AND(
+  new OR(String, Number),
+  ensure((input: string | number) => input !== "", errorMsg + "an empty string"), 
+  ensure((input: string | number) => !isNaN(+input), (input) => errorMsg + "NaN (parsed from \"" + input + "\")"), 
+  s => s + ""
+)
+
+export function stringStartsWith<S extends string>(s: S) {
+  return ensure((input: `${S}${string}`) => input.startsWith(s), `Input must start with ${s}`)
+}
+
 
