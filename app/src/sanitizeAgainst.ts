@@ -38,8 +38,20 @@ export class OBJECT<ValuePattern extends Pattern, KeyPattern extends PossibleKey
   get [fromInstanceSym]() {return "OBJECT"}
   private saniValue: Function
   private saniKey: Function
-  constructor(private valuePattern: ValuePattern, private keyPattern: KeyPattern = (a => a) as any) {
+  private soft: boolean
+  private keyPattern: KeyPattern
+  constructor(valuePattern: ValuePattern, soft: boolean) 
+  constructor(valuePattern: ValuePattern, keyPattern: KeyPattern, soft?: boolean) 
+  constructor(private valuePattern: ValuePattern, keyPattern_soft: KeyPattern = (a => a) as any, soft = false) {
     super()
+    if (typeof keyPattern_soft === "boolean") {
+      this.keyPattern = (a => a) as any
+      this.soft = keyPattern_soft
+    }
+    else {
+      this.keyPattern = keyPattern_soft
+      this.soft = soft
+    }
   }
   init() {
     this.saniKey = sanitizeRec(this.keyPattern)
@@ -52,7 +64,15 @@ export class OBJECT<ValuePattern extends Pattern, KeyPattern extends PossibleKey
     knownInputObjects.set(input as any, out)
     for (const key in input as any) {
       if (out[key] !== undefined) continue // prototype poisoning protection
-      out[this.saniKey(key)] = this.saniValue(input[key])
+      if (!this.soft) {
+        out[this.saniKey(key)] = this.saniValue(input[key])
+      }
+      else {
+        try {
+          out[this.saniKey(key)] = this.saniValue(input[key])
+        }
+        catch (e) {}
+      }
     }
     return out
   }
