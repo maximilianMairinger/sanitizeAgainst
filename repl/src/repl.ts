@@ -5,7 +5,7 @@ import { expect } from "./mockJest"
 
 (async () => {
     
-  const a = sani(new OBJECT(new OR(Function, Promise)))
-  a()
+  // const a = sani(new OBJECT(new OR(Function, Promise)))
+  // a()
   
 })()
