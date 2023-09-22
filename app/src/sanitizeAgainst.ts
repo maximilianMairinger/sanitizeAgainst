@@ -6,6 +6,20 @@ export async function polyfill() {
 }
 
 
+declare global {
+  // @ts-ignore
+  var String:  {stringConstructorIdentifier19823718723:  true} & StringConstructor;
+  // @ts-ignore
+  var Number:  {numberConstructorIdentifier19823718723:  true} & NumberConstructor;
+  // @ts-ignore
+  var Boolean: {booleanConstructorIdentifier19823718723: true} & BooleanConstructor;
+  // @ts-ignore
+  var Object:  {ObjectConstructorIdentifier19823718723:  true} & ObjectConstructor;
+  // @ts-ignore
+  var Function: {FunctionConstructorIdentifier19823718723: true} & FunctionConstructor;
+}
+
+
 function isConstructor(f: Function) {
   return f.prototype !== undefined
 }
@@ -24,40 +38,44 @@ type Inp = InpPrim | InpObj
 const fromInstanceSym = Symbol("fromInstance")
 
 abstract class Matcher {
-  init?(): void
-  abstract matches(input: unknown): unknown
-  abstract [fromInstanceSym]: string
+  protected init?(): void
+  protected abstract matches(input: unknown): unknown
+  protected abstract [fromInstanceSym]: string
 }
 
-type PossibleKeyPatterns = Pattern & (((key: string) => string) | Combinator | CONST<any> | typeof String | AND<(a: any) => (string | number)>)
+type PossibleKeyPatterns = Pattern & (((key: string) => string) | Combinator | CONST<any> | typeof String | AND<typeof String, typeof Number>)
 
 
 
 const isObjectSani = sanitizeRec(Object)
-export class OBJECT<ValuePattern extends Pattern, KeyPattern extends PossibleKeyPatterns> extends Matcher {
-  get [fromInstanceSym]() {return "OBJECT"}
+export class OBJECT<ValuePattern extends Pattern, KeyPattern extends PossibleKeyPatterns, Deep extends boolean = false> extends Matcher {
+  protected get [fromInstanceSym]() {return "OBJECT"}
   private saniValue: Function
   private saniKey: Function
   private soft: boolean
   private keyPattern: KeyPattern
-  constructor(valuePattern: ValuePattern, soft: boolean) 
-  constructor(valuePattern: ValuePattern, keyPattern: KeyPattern, soft?: boolean) 
-  constructor(private valuePattern: ValuePattern, keyPattern_soft: KeyPattern = (a => a) as any, soft = false) {
+  private deep: boolean
+  constructor(valuePattern: ValuePattern, soft: boolean, deep?: Deep) 
+  constructor(valuePattern: ValuePattern, keyPattern?: KeyPattern, soft?: boolean, deep?: Deep) 
+  constructor(private valuePattern: ValuePattern, keyPattern_soft: KeyPattern = (a => a) as any, soft_selfCyclic = false, selfCyclic = false) {
     super()
     if (typeof keyPattern_soft === "boolean") {
       this.keyPattern = (a => a) as any
       this.soft = keyPattern_soft
+      this.deep = soft_selfCyclic
     }
     else {
       this.keyPattern = keyPattern_soft
-      this.soft = soft
+      this.soft = soft_selfCyclic
+      this.deep = selfCyclic
     }
+    if (this.deep) this.valuePattern = new OR(this.valuePattern, this) as any
   }
-  init() {
+  protected init() {
     this.saniKey = sanitizeRec(this.keyPattern)
     this.saniValue = sanitizeRec(this.valuePattern)
   }
-  matches(input: unknown): unknown {
+  protected matches(input: unknown): unknown {
     isObjectSani(input)
     if (knownInputObjects.has(input as any)) return knownInputObjects.get(input as any)
     const out = {}
@@ -80,18 +98,18 @@ export class OBJECT<ValuePattern extends Pattern, KeyPattern extends PossibleKey
 
 const isPromiseSani = sanitizeRec(Promise)
 export class AWAITED<Pat extends Pattern> extends Matcher {
-  get [fromInstanceSym]() {return "AWAITED"}
+  protected get [fromInstanceSym]() {return "AWAITED"}
   public sani: Function
   constructor(private _pattern: Pat) {
     super()
   }
-  init() {
+  protected init() {
     this.sani = sanitizeRec(this.pattern)
   }
   private get pattern(): Pat {
     return this._pattern instanceof AWAITED ? this._pattern.pattern : this._pattern
   }
-  matches(input: unknown): unknown {
+  protected matches(input: unknown): unknown {
     isPromiseSani(input)
     const myKnownInputObjects = knownInputObjects
     return (input as Promise<any>).then((input) => {
@@ -105,9 +123,9 @@ export class AWAITED<Pat extends Pattern> extends Matcher {
 
 
 export class CONST<MyPattern extends string | number | boolean> extends Matcher {
-  get [fromInstanceSym]() {return "CONST"}
+  protected get [fromInstanceSym]() {return "CONST"}
   constructor(private constVal: MyPattern) {super()}
-  matches(input: unknown): unknown {
+  protected matches(input: unknown): unknown {
     if (input !== this.constVal) throw `Expected ${this.constVal}, got ${input}`
     return input
   }
@@ -117,9 +135,9 @@ export class CONST<MyPattern extends string | number | boolean> extends Matcher 
 
 
 abstract class Combinator extends Matcher {
-  patterns: Pattern[]
-  sanis: Function[] // this gets generated in the recSanitize function
-  init() {
+  protected patterns: Pattern[]
+  protected sanis: Function[] // this gets generated in the recSanitize function
+  protected init() {
     this.sanis = this.patterns.map((a) => sanitizeRec(a))
   }
 }
@@ -133,33 +151,50 @@ abstract class BooleanCombinator extends Combinator {
 }
 
 
-type FMay<A extends Pattern> = ((f1: A extends (...args: any) => any ? Sanitized<ReturnType<A>> : Sanitized<A>) => any)
 
 
 
-export class AND<R, A1 extends Pattern = any, A1Hint extends Pattern = any, A2 extends Pattern = any, A3 extends Pattern = any, A4 extends Pattern = any, A5 extends Pattern = any, A6 extends Pattern = any, A7 extends Pattern = any, A8 extends Pattern = any, A9 extends Pattern = any, A10 extends Pattern = any> extends BooleanCombinator {
+
+type SanitizeTuple<Tuple extends Pattern[]> = {
+  [key in keyof Tuple]: Sanitized<Tuple[key]>
+}
+
+type FilterOutAnyTuple<Tuple extends Pattern[]> = {
+  [key in keyof Tuple]: IsAny<Tuple[key]> extends true ? never : Tuple[key]
+}
+
+type FMay<As extends Pattern[]> = ((f1: TupleToIntersection<SanitizeTuple<FilterOutAnyTuple<As>>>) => any) | NOT<(a: TupleToIntersection<SanitizeTuple<FilterOutAnyTuple<As>>>) => unknown>
+
+
+type IsAny<T> = 0 extends (1 & T) ? true : false
+
+
+export class AND<A1 extends Pattern, A2 extends Pattern = any, A3 extends Pattern = any, A4 extends Pattern = any, A5 extends Pattern = any, A6 extends Pattern = any, A7 extends Pattern = any, A8 extends Pattern = any, A9 extends Pattern = any, A10 extends Pattern = any, R extends FilterOutAnyTuple<[A1,A2,A3,A4,A5,A6,A7,A8,A9,A10]> = FilterOutAnyTuple<[A1,A2,A3,A4,A5,A6,A7,A8,A9,A10]>> extends BooleanCombinator {
+
   private isAnd: any
-  get [fromInstanceSym]() {return "AND"}
+  protected get [fromInstanceSym]() {return "AND"}
   
 
 
-  constructor(f1: (A1 | ((a: Sanitized<A1Hint>) => any)) & R)
-  constructor(f1: A1 | ((a: Sanitized<A1Hint>) => any), f2: (A2 | FMay<A1>) & R)
-  constructor(f1: A1 | ((a: Sanitized<A1Hint>) => any), f2: A2 | FMay<A1>, f3: (A3 | FMay<A2>) & R)
-  constructor(f1: A1 | ((a: Sanitized<A1Hint>) => any), f2: A2 | FMay<A1>, f3: A3 | FMay<A2>, f4: (A4 | FMay<A3>) & R)
-  constructor(f1: A1 | ((a: Sanitized<A1Hint>) => any), f2: A2 | FMay<A1>, f3: A3 | FMay<A2>, f4: A4 | FMay<A3>, f5: (A5 | FMay<A4>) & R)
-  constructor(f1: A1 | ((a: Sanitized<A1Hint>) => any), f2: A2 | FMay<A1>, f3: A3 | FMay<A2>, f4: A4 | FMay<A3>, f5: A5 | FMay<A4>, f6: (A6 | FMay<A5>) & R)
-  constructor(f1: A1 | ((a: Sanitized<A1Hint>) => any), f2: A2 | FMay<A1>, f3: A3 | FMay<A2>, f4: A4 | FMay<A3>, f5: A5 | FMay<A4>, f6: A6 | FMay<A5>, f7: (A7 | FMay<A6>) & R)
-  constructor(f1: A1 | ((a: Sanitized<A1Hint>) => any), f2: A2 | FMay<A1>, f3: A3 | FMay<A2>, f4: A4 | FMay<A3>, f5: A5 | FMay<A4>, f6: A6 | FMay<A5>, f7: A7 | FMay<A6>, f8: (A8 | FMay<A7>) & R)
-  constructor(f1: A1 | ((a: Sanitized<A1Hint>) => any), f2: A2 | FMay<A1>, f3: A3 | FMay<A2>, f4: A4 | FMay<A3>, f5: A5 | FMay<A4>, f6: A6 | FMay<A5>, f7: A7 | FMay<A6>, f8: A8 | FMay<A7>, f9: (A9 | FMay<A8>) & R)
-  constructor(f1: A1 | ((a: Sanitized<A1Hint>) => any), f2: A2 | FMay<A1>, f3: A3 | FMay<A2>, f4: A4 | FMay<A3>, f5: A5 | FMay<A4>, f6: A6 | FMay<A5>, f7: A7 | FMay<A6>, f8: A8 | FMay<A7>, f9: A9 | FMay<A8>, f10: (A10 | FMay<A9>) & R)
+  // constructor(f1: A1)
+  // constructor(f1: A1 | ((a: Sanitized<A1Hint>) => any), f2: NOT<(a: SaniRet<A1>) => unknown>)
+  // constructor(f1: A1, f2: A2 | FMay<A1>)
+  // constructor(f1: A1, f2: A2 | FMay<A1>, f3: (A3 | FMay<A2>))
+  // constructor(f1: A1, f2: A2 | FMay<A1>, f3: A3 | FMay<A2>, f4: (A4 | FMay<A3>))
+  // constructor(f1: A1, f2: A2 | FMay<A1>, f3: A3 | FMay<A2>, f4: A4 | FMay<A3>, f5: (A5 | FMay<A4>))
+  // constructor(f1: A1, f2: A2 | FMay<A1>, f3: A3 | FMay<A2>, f4: A4 | FMay<A3>, f5: A5 | FMay<A4>, f6: (A6 | FMay<A5>))
+  // constructor(f1: A1, f2: A2 | FMay<A1>, f3: A3 | FMay<A2>, f4: A4 | FMay<A3>, f5: A5 | FMay<A4>, f6: A6 | FMay<A5>, f7: (A7 | FMay<A6>))
+  // constructor(f1: A1, f2: A2 | FMay<A1>, f3: A3 | FMay<A2>, f4: A4 | FMay<A3>, f5: A5 | FMay<A4>, f6: A6 | FMay<A5>, f7: A7 | FMay<A6>, f8: (A8 | FMay<A7>))
+  // constructor(f1: A1, f2: A2 | FMay<A1>, f3: A3 | FMay<A2>, f4: A4 | FMay<A3>, f5: A5 | FMay<A4>, f6: A6 | FMay<A5>, f7: A7 | FMay<A6>, f8: A8 | FMay<A7>, f9: (A9 | FMay<A8>))
+  constructor(f1: A1, f2?: A2 | FMay<[A1]>, f3?: A3 | FMay<[A1, A2]>, f4?: A4 | FMay<[A1,A2,A3]>, f5?: A5 | FMay<[A1,A2,A3,A4]>, f6?: A6 | FMay<[A1,A2,A3,A4,A5]>, f7?: A7 | FMay<[A1,A2,A3,A4,A5,A6]>, f8?: A8 | FMay<[A1,A2,A3,A4,A5,A6,A7]>, f9?: A9 | FMay<[A1,A2,A3,A4,A5,A6,A7,A8]>, f10?: A10 | FMay<[A1,A2,A3,A4,A5,A6,A7,A8,A9]>)
+  // constructor(f1: A1, f2?: (FMay<[A1]>))
   
 
-  // constructor(...ar: Pattern[])
   constructor(...ar: Pattern[]) {
+  // constructor(...ar: AllPats & ([(never | Pattern) & A1, ((a: A1) => any)])) {
     super(...ar)
   }
-  matches(input: unknown) {
+  protected matches(input: unknown) {
     let curRet = input
     for (const a of this.sanis) {
       curRet = a(curRet)
@@ -170,9 +205,10 @@ export class AND<R, A1 extends Pattern = any, A1Hint extends Pattern = any, A2 e
 
 
 
+
 export class OR<Arg extends Pattern[], Pat extends Arg[number] = Arg[number]> extends BooleanCombinator {
   private isOr: any
-  get [fromInstanceSym]() {return "OR"}
+  protected get [fromInstanceSym]() {return "OR"}
   
   
   private awaitedSanis: AWAITED<any>[]
@@ -180,12 +216,12 @@ export class OR<Arg extends Pattern[], Pat extends Arg[number] = Arg[number]> ex
   constructor(...ar: Arg) {
     super(...ar)
   }
-  init() {
+  protected init() {
     super.init()
     this.awaitedSanis = this.sanis.filter((a) => a[fromInstanceSym] !== undefined && a[fromInstanceSym][fromInstanceSym] === "AWAITED").map((a) => a[fromInstanceSym])
     this.nonAwaitedSanis = this.sanis.filter((a) => !(a[fromInstanceSym] !== undefined && a[fromInstanceSym][fromInstanceSym] === "AWAITED"))
   }
-  matches(input: unknown) {
+  protected matches(input: unknown) {
     for (const a of this.nonAwaitedSanis) {
       try {
         const r = a(input)
@@ -209,17 +245,23 @@ export class OR<Arg extends Pattern[], Pat extends Arg[number] = Arg[number]> ex
     }
     throw new Error("No match")
   }
+
+  addPattern(pat: Pattern) {
+    this.patterns.push(pat)
+  }
 }
 
-export class NOT<Arg extends Pattern = Pattern, Pat extends Exclude<Pattern, Arg> = Exclude<Pattern, Arg>> extends Combinator {
+export class NOT<FunctionHint extends ((a: unknown) => unknown), Arg extends Pattern = FunctionHint> extends Combinator {
   private isNot: any
-  get [fromInstanceSym]() {return "NOT"}
+  protected get [fromInstanceSym]() {return "NOT"}
+  constructor(ar: Arg)
+  constructor(f1: FunctionHint & Arg)
   constructor(ar: Arg) {
     super()
     this.patterns = [ar]
     // this.ar = sanitize(ar)
   }
-  matches(input: unknown) {
+  protected matches(input: unknown) {
     let throws: boolean
     try {
       this.sanis[0](input)
@@ -228,9 +270,13 @@ export class NOT<Arg extends Pattern = Pattern, Pat extends Exclude<Pattern, Arg
       throws = true
     }
     if (throws) return input as any
-    else throw new Error("Match")
+    else throw new Error("Matched even though it is negated.")
   }
 }
+
+
+
+
 
 function getNumberOfQuestionmarksAtTheEndOfString(str: string) {
   let i = str.length - 1
@@ -280,13 +326,10 @@ function sanitizeRec<Pat extends Pattern>(pattern: Pat) {
   else if (pattern === String) against = againstPrimitive("string")
   else if (pattern === Number) against = againstPrimitive("number")
   else if (pattern === Boolean) against = againstPrimitive("boolean")
-  else if (pattern === Function) against = (input) => {
-    if (!(input instanceof Function)) throw new Error('Input is not a function')
-    return input
-  }
+  else if (pattern === Function) against = againstPrimitive("function")
   else if (pattern instanceof Matcher) {
-    if (pattern.init) pattern.init()
-    against = pattern.matches.bind(pattern)
+    if ((pattern as any).init) (pattern as any).init()
+    against = (pattern as any).matches.bind(pattern)
     against[fromInstanceSym] = pattern
   }
   else if (pattern === Object) against = (input) => {
@@ -361,9 +404,9 @@ type EscapeQuestionmarkProps<Ob> = {[key in keyof Ob as key extends string ? Esc
 
 
 
+type DeepOBJECT<ValArg extends Pattern, KeyArg extends PossibleKeyPatterns, Output extends boolean> = {[key in Sanitized<KeyArg, Output>]: Sanitized<ValArg> | DeepOBJECT<ValArg, KeyArg, Output>}
 
-
-type ParseIfCombinator<Val extends Prim, Output extends boolean> = Val extends AND<infer Out, infer Inp> ? Output extends true ? Out extends Pattern ? Sanitized<Out, Output> : never : Sanitized<Inp, Output> : Val extends OR<infer Arg> ? AWAITED<any> extends Arg[number] ? Output extends true ? Promise<Awaited<Sanitized<Arg[number], Output>>> : Sanitized<Arg[number], Output> : Sanitized<Arg[number], Output> : Val extends NOT<infer Arg> ? Exclude<Inp, Sanitized<Arg, Output>> : Val extends CONST<infer Arg> ? Arg : Val extends AWAITED<infer Arg> ? Promise<Sanitized<Arg, Output> extends Promise<any> ? Awaited<Sanitized<Arg, Output>> : Sanitized<Arg, Output>> : Val extends OBJECT<infer ValArg, infer KeyArg> ? {[key in Sanitized<KeyArg, Output>]: Sanitized<ValArg>} : Val
+type ParseIfCombinator<Val extends Prim, Output extends boolean> = Val extends AND<infer _0, infer _1, infer _2, infer _3, infer _4, infer _5, infer _6, infer _7, infer _8, infer _9, infer Args> ? TupleToIntersection<SanitizeTuple<Args>> : Val extends OR<infer Arg> ? AWAITED<any> extends Arg[number] ? Output extends true ? Promise<Awaited<Sanitized<Arg[number], Output>>> : Sanitized<Arg[number], Output> : Sanitized<Arg[number], Output> : Val extends NOT<infer _, infer Arg> ? Exclude<Inp, Sanitized<Arg, Output>> : Val extends CONST<infer Arg> ? Arg : Val extends AWAITED<infer Arg> ? Promise<Sanitized<Arg, Output> extends Promise<any> ? Awaited<Sanitized<Arg, Output>> : Sanitized<Arg, Output>> : Val extends OBJECT<infer ValArg, infer KeyArg, infer Deep> ? Deep extends false ? {[key in Sanitized<KeyArg, Output>]: Sanitized<ValArg>} : DeepOBJECT<ValArg, KeyArg, Output> : Val
 type ParseVal<Val extends Prim, Output extends boolean> = Val extends typeof Number ? number : Val extends typeof String ? string : Val extends typeof Boolean ? boolean : Val extends Matcher ? ParseIfCombinator<Val, Output> : Val extends {new(...a:any[]): infer I} ? I : Val extends number ? number : Val extends string ? string : Val extends boolean ? boolean : Val extends ((a: infer Inp) => infer Out) ? Output extends true ? Out : Inp : Val
 type ParseValOb<Ob extends {[key in string]: Prim}, Output extends boolean> = RemovePropsByValue<{[key in keyof Ob]: Ob[key] extends PrimWithDefault ? never : ParseVal<Ob[key], Output>}, never> & RemovePropsByValue<{[key in keyof Ob]?: Ob[key] extends PrimWithDefault ? Ob[key] : never}, never>
 
@@ -377,6 +420,7 @@ type Sanitized<Ob extends Pattern, Output extends boolean = true> = Ob extends P
 type RemovePropsByValue<T, V> = {
   [K in keyof T as T[K] extends V ? never : K]: T[K];
 };
+type TupleToIntersection<T extends any[]> = (T extends [infer Head, ...infer Rest] ? Head & TupleToIntersection<Rest> : unknown);
 
 
 export default sanitize
@@ -405,5 +449,4 @@ export const numberLikeStringPattern = new AND(
 export function stringStartsWith<S extends string>(s: S) {
   return ensure((input: `${S}${string}`) => input.startsWith(s), `Input must start with ${s}`)
 }
-
 
