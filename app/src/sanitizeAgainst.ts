@@ -57,21 +57,22 @@ export class OBJECT<ValuePattern extends Pattern, KeyPattern extends PossibleKey
   private deep: boolean
   constructor(valuePattern: ValuePattern, soft: boolean, deep?: Deep) 
   constructor(valuePattern: ValuePattern, keyPattern?: KeyPattern, soft?: boolean, deep?: Deep) 
-  constructor(private valuePattern: ValuePattern, keyPattern_soft: KeyPattern = (a => a) as any, soft_selfCyclic = false, selfCyclic = false) {
+  constructor(private valuePattern: ValuePattern, keyPattern_soft: KeyPattern = (a => a) as any, soft_deep = false, deep = false) {
     super()
     if (typeof keyPattern_soft === "boolean") {
       this.keyPattern = (a => a) as any
       this.soft = keyPattern_soft
-      this.deep = soft_selfCyclic
+      this.deep = soft_deep
     }
     else {
       this.keyPattern = keyPattern_soft
-      this.soft = soft_selfCyclic
-      this.deep = selfCyclic
+      this.soft = soft_deep
+      this.deep = deep
     }
     if (this.deep) this.valuePattern = new OR(this.valuePattern, this) as any
   }
   protected init() {
+    this.init = () => {}
     this.saniKey = sanitizeRec(this.keyPattern)
     this.saniValue = sanitizeRec(this.valuePattern)
   }

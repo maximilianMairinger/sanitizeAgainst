@@ -4,8 +4,19 @@ import { expect } from "./mockJest"
 
 
 (async () => {
+
+  const a = sani(new OBJECT(Boolean, false, true))
     
-  // const a = sani(new OBJECT(new OR(Function, Promise)))
-  // a()
+  expect(a({
+    lel1: false,
+    lel2: {
+      lel: true
+    }
+  })).eq({
+    lel1: false,
+    lel2: {
+      lel: true
+    }
+  })
   
 })()

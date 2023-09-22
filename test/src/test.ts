@@ -1,3 +1,4 @@
+import cloneKeys from "circ-clone"
 import sani, { AND, OR, NOT, AWAITED, OBJECT, ensure, stringStartsWith, numberLikeStringPattern } from "../../app/src/sanitizeAgainst"
 import "./extend"
 
@@ -875,7 +876,41 @@ describe("core", () => {
       expect(against({lel: 2, qwe: 3, hasdh: 212321})).eq({lel: 2, qwe: 3, hasdh: 212321})
       expect(() => against({lel: 2, qwe: 3, hasdh: 212321, lelS: "qwe"})).toThrow()
       expect(() => against({lelS: "2"})).toThrow()
+      expect(() => against({lelS: {lel : 2}})).toThrow()
       expect(against({})).eq({})
+    })
+
+    test("Combinatorics value usage", () => {
+      const a1 = sani(new OBJECT(new OR(Number, Boolean)))
+
+      expect(a1({lel: 2, qwe: 3, hasdh: 212321})).eq({lel: 2, qwe: 3, hasdh: 212321})
+      expect(() => a1({lel: 2, qwe: 3, hasdh: 212321, lelS: "qwe"})).toThrow()
+      expect(() => a1({lelS: "2"})).toThrow()
+      expect(() => a1({lelS: {lel : 2}})).toThrow()
+      expect(a1({})).eq({})
+      expect(a1({lel: 2, qwe: 3, qq: false})).eq({lel: 2, qwe: 3, qq: false})
+      expect(a1({lel: 2, qwe: 3, qq: true, qqq: 2})).eq({lel: 2, qwe: 3, qq: true, qqq: 2})
+      expect(() => a1({lel: 2, qwe: 3, qq: false, qqq: "2"})).toThrow()
+
+      const a2 = sani(new OBJECT(new AND(Number, (inp) => {
+        if (inp < 3) throw new Error("asd")
+        else return inp
+      })))
+
+      expect(() => a2({lel: 2, qwe: 3, hasdh: 212321})).toThrow()
+      expect(a2({lel: 3, qwe: 4, hasdh: 212321})).eq({lel: 3, qwe: 4, hasdh: 212321})
+      expect(() => a2({lel: 2, qwe: 3, hasdh: 212321, lelS: "qwe"})).toThrow()
+      expect(() => a2({lelS: "2"})).toThrow()
+      expect(() => a2({lelS: {lel : 2}})).toThrow()
+      expect(a2({})).eq({})
+
+      const a3 = sani(new OBJECT(new AND(Number, new NOT((inp: number) => {
+        if (inp < 3) throw new Error("asd")
+        else return inp
+      }))))
+
+      expect(a3({}))
+
     })
 
     test("Key usage", () => {
@@ -920,6 +955,581 @@ describe("core", () => {
       expect(against(input1)).eq({lel1: false})
       expect(against(input1).lel123).eq(undefined)
       expect("lel123" in against(input1)).eq(false)
+    })
+
+    test("Deep", () => {
+
+      function run(a: Function) {
+        expect(a({
+          lel1: false,
+          lel2: {
+            lel: true
+          }
+        })).eq({
+          lel1: false,
+          lel2: {
+            lel: true
+          }
+        })
+  
+        expect(() => a({
+          lel1: false,
+          lel2: {
+            lel1: true,
+            lel: "no"
+          }
+        })).toThrow()
+  
+        expect(() => a({
+          lel1: false,
+          lel2: {
+            lel1: true,
+            lel: {
+              lel: "no"
+            }
+          }
+        })).toThrow()
+      }
+
+
+      const a = sani(new OBJECT(Boolean, stringStartsWith("lel"), false, true))
+      run(a)
+      run(sani(new OBJECT(Boolean, false, true)))
+
+
+      expect(() => a({
+        lel1: false,
+        lel2: {
+          lel1: true,
+          lel: {
+            le: false
+          }
+        }
+      })).toThrow()
+    })
+
+    test("Deep cyclic", () => {
+      function run(a: Function) {
+        const input1 = {
+          lel1: false,
+          lel2: {
+            lel: true
+          }
+        }
+        // @ts-ignore
+        input1.lel2.lelinput1 = input1
+  
+        const output1 = cloneKeys(input1)
+  
+        expect(a(input1)).eq(output1)
+  
+        const input2 = {
+          lel1: false,
+          lel2: {
+            lel: true,
+            lel1: "no"
+          }
+        }
+        // @ts-ignore
+        input1.lel2.lelinput2 = input2
+        
+        expect(() => a(input2)).toThrow()
+  
+        const input3 = {
+          lel1: false,
+          lel2: {
+            lel1: true,
+            lel: {
+              lel: "no"
+            }
+          }
+        }
+        // @ts-ignore
+        input3.lel2.lelinput3 = input3
+  
+        expect(() => a(input3)).toThrow()
+  
+  
+        const input4 = {
+          lel1: false,
+          lel2: {
+            lel1: "true",
+            lel: {
+              lel: false
+            }
+          }
+        }
+        // @ts-ignore
+        input3.lel2.lel.lelinput4 = input4
+  
+        expect(() => a(input4)).toThrow()
+
+        const input5 = {
+          lel1: false,
+          lel2: {
+            lel1: true,
+            lel: {
+              lel: false
+            }
+          }
+        }
+
+        // @ts-ignore
+        input5.lel2.lelel = input5.lel2.lel
+        // @ts-ignore
+        input5.lelel = input5.lel2.lel
+        // @ts-ignore
+        input5.lel2.lelel2 = input5
+
+
+        expect(a(cloneKeys(input5))).eq(input5)
+
+
+
+        const input6 = {
+          lel1: false,
+          lel2: {
+            lel1: "true",
+            lel: {
+              lel: false
+            }
+          }
+        }
+
+        // @ts-ignore
+        input6.lel2.lelel = input6.lel2.lel
+        // @ts-ignore
+        input6.lelel = input6.lel2.lel
+        // @ts-ignore
+        input6.lel2.lelel2 = input6
+
+        expect(() => a(input6)).toThrow()
+
+
+        const input7 = {
+          lel1: false,
+          lel2: {
+            lel1: true,
+            lel: {
+              lel: "false"
+            }
+          }
+        }
+
+        // @ts-ignore
+        input7.lel2.lelel = input7.lel2.lel
+        // @ts-ignore
+        input7.lelel = input7.lel2.lel
+        // @ts-ignore
+        input7.lel2.lelel2 = input7
+
+        expect(() => a(input7)).toThrow()
+
+      }
+
+      run(sani(new OBJECT(Boolean, stringStartsWith("lel"), false, true)))
+      run(sani(new OBJECT(Boolean, false, true)))
+
+
+      const a = sani(new OBJECT(Boolean, stringStartsWith("lel"), false, true))
+
+      const input1 = {
+        lel1: false,
+        lel2: {
+          lel1: true,
+          lel: {
+            le: true
+          }
+        }
+      }
+
+      expect(() => a(input1)).toThrow()
+
+
+      const input2 = {
+        lel1: false,
+        lel2: {
+          le: true,
+          lel: {
+            lel: true
+          }
+        }
+      }
+
+      expect(() => a(input2)).toThrow()
+
+
+      const input3 = {
+        lel1: false,
+        lel2: {
+          lel1: true,
+          lel: {
+            le: true
+          }
+        }
+      }
+
+      // @ts-ignore
+      input3.lel2.lelel = input3.lel2.lel
+      // @ts-ignore
+      input3.lelel = input3.lel2.lel
+      // @ts-ignore
+      input3.lel2.lelel2 = input3
+
+      expect(() => a(input3)).toThrow()
+
+
+      const input4 = {
+        lel1: false,
+        lel2: {
+          le: true,
+          lel: {
+            lel: true
+          }
+        }
+      }
+
+      // @ts-ignore
+      input4.lel2.lelel = input4.lel2.lel
+      // @ts-ignore
+      input4.lelel = input4.lel2.lel
+      // @ts-ignore
+      input4.lel2.lelel2 = input4
+
+      expect(() => a(input4)).toThrow()
+    })
+
+    test("Soft", () => {
+      
+      function run(a: Function) {
+        expect(a({
+          lel1: false,
+          lel2: "no",
+          lel3: {
+            lel: true,
+            lel2: 2
+          }
+        })).eq({
+          lel1: false
+        })
+      }
+
+      const a = sani(new OBJECT(Boolean, stringStartsWith("lel"), true))
+      run(a)
+      run(sani(new OBJECT(Boolean, true)))
+      run(sani(new OBJECT(Boolean, stringStartsWith("lel"), true, false)))
+      run(sani(new OBJECT(Boolean, true, false)))
+      
+      
+
+      expect(a({
+        lel1: false,
+        lel2: "no",
+        lel3: 2,
+        lel4: true,
+        le5: true,
+      })).eq({
+        lel1: false,
+        lel4: true
+      })
+
+        
+    })
+
+    test("Deep and soft", () => {
+      function run(a: Function) {
+        expect(a({
+          lel1: false,
+          lel2: "no",
+          lel3: {
+            lel: true,
+            lel2: 2
+          }
+        })).eq({
+          lel1: false,
+          lel3: {
+            lel: true
+          }
+        })
+      }
+
+      const a = sani(new OBJECT(Boolean, stringStartsWith("lel"), true, true))
+      run(a)
+      run(sani(new OBJECT(Boolean, true, true)))
+      
+      
+
+      expect(a({
+        lel1: false,
+        lel2: "no",
+        lel3: 2,
+        lel4: true,
+        le5: true,
+      })).eq({
+        lel1: false,
+        lel4: true
+      })
+
+      expect(a({
+        lel1: false,
+        lel2: "no",
+        lel3: 2,
+        lel4: true,
+        le1: true,
+        le2: {
+          lel: true,
+        },
+        lel5: {
+          lel2: false,
+          lel3: false,
+          qwe: {
+            lel: true
+          }
+          lel4: 2,
+          lel5: {
+            lel: true,
+            lel2: 2
+          }
+          lel6: {},
+          lel7: {
+            le: true,
+            lel: 2,
+            le: 4
+          }
+        }
+      })).eq({
+        lel1: false,
+        lel4: true,
+        lel5: {
+          lel2: false,
+          lel3: false,
+          lel5: {
+            lel: true
+          },
+          lel6: {},
+          lel7: {}
+        }
+      })
+    })
+
+    test("Deep and soft cyclic", () => {
+      function run(a: Function) {
+        const input1 = {
+          lel1: false,
+          lel2: {
+            lel: true
+          }
+        }
+        // @ts-ignore
+        input1.lel2.lelinput1 = input1
+  
+        const output1 = cloneKeys(input1)
+  
+        expect(a(input1)).eq(output1)
+  
+        const input2 = {
+          lel1: false,
+          lel2: {
+            lel: true,
+            lel1: "no"
+          }
+        }
+        // @ts-ignore
+        input1.lel2.lelinput2 = input2
+
+        const output2 = cloneKeys(input2)
+        delete output2.lel2.lel1
+  
+        expect(a(input2)).eq(output2)
+  
+        const input3 = {
+          lel1: false,
+          lel2: {
+            lel1: true,
+            lel: {
+              lel: "no"
+            }
+          }
+        }
+        // @ts-ignore
+        input3.lel2.lelinput3 = input3
+
+        const output3 = cloneKeys(input3)
+        delete output3.lel2.lel.lel
+  
+        expect(a(input3)).eq(output3)
+  
+  
+        const input4 = {
+          lel1: false,
+          lel2: {
+            lel1: "no",
+            lel: {
+              lel: false
+            }
+          }
+        }
+        // @ts-ignore
+        input4.lel2.lel.lelinput4 = input4
+
+        const output4 = cloneKeys(input4)
+        delete output4.lel2.lel1
+  
+        expect(a(input4)).eq(output4)
+
+
+
+        const input5 = {
+          lel1: false,
+          lel2: {
+            lel1: true,
+            lel: {
+              lel: false
+            }
+          }
+        }
+
+        // @ts-ignore
+        input5.lel2.lelel = input5.lel2.lel
+        // @ts-ignore
+        input5.lelel = input5.lel2.lel
+        // @ts-ignore
+        input5.lel2.lelel2 = input5
+
+
+        expect(a(cloneKeys(input5))).eq(input5)
+
+
+
+        const input6 = {
+          lel1: false,
+          lel2: {
+            lel1: "true",
+            lel: {
+              lel: false
+            }
+          }
+        }
+
+        // @ts-ignore
+        input6.lel2.lelel = input6.lel2.lel
+        // @ts-ignore
+        input6.lelel = input6.lel2.lel
+        // @ts-ignore
+        input6.lel2.lelel2 = input6
+
+
+        const output6 = cloneKeys(input6)
+        delete output6.lel2.lel1
+
+        expect(a(input6)).eq(output6)
+
+
+        const input7 = {
+          lel1: false,
+          lel2: {
+            lel1: true,
+            lel: {
+              lel: "false"
+            }
+          }
+        }
+
+        // @ts-ignore
+        input7.lel2.lelel = input7.lel2.lel
+        // @ts-ignore
+        input7.lelel = input7.lel2.lel
+        // @ts-ignore
+        input7.lel2.lelel2 = input7
+
+        const output7 = cloneKeys(input7)
+        delete output7.lel2.lel.lel
+
+        expect(a(input7)).eq(output7)
+      }
+
+      run(sani(new OBJECT(Boolean, stringStartsWith("lel"), true, true)))
+      run(sani(new OBJECT(Boolean, true, true)))
+
+
+      const a = sani(new OBJECT(Boolean, stringStartsWith("lel"), true, true))
+
+      const input1 = {
+        lel1: false,
+        lel2: {
+          lel1: true,
+          lel: {
+            le: true
+          }
+        }
+      }
+
+      const output1 = cloneKeys(input1)
+      delete output1.lel2.lel.le
+
+      expect(a(input1)).eq(output1)
+
+
+      const input2 = {
+        lel1: false,
+        lel2: {
+          le: true,
+          lel: {
+            lel: true
+          }
+        }
+      }
+      
+      const output2 = cloneKeys(input2)
+      delete output2.lel2.le
+
+      expect(a(input2)).eq(output2)
+
+
+      const input3 = {
+        lel1: false,
+        lel2: {
+          lel1: true,
+          lel: {
+            le: true
+          }
+        }
+      }
+
+      // @ts-ignore
+      input3.lel2.lelel = input3.lel2.lel
+      // @ts-ignore
+      input3.lelel = input3.lel2.lel
+      // @ts-ignore
+      input3.lel2.lelel2 = input3
+
+      const output3 = cloneKeys(input3)
+      delete output3.lel2.lel.le
+
+      expect(a(input3)).eq(output3)
+
+
+      const input4 = {
+        lel1: false,
+        lel2: {
+          le: true,
+          lel: {
+            lel: true
+          }
+        }
+      }
+
+      // @ts-ignore
+      input4.lel2.lelel = input4.lel2.lel
+      // @ts-ignore
+      input4.lelel = input4.lel2.lel
+      // @ts-ignore
+      input4.lel2.lelel2 = input4
+
+      const output4 = cloneKeys(input4)
+      delete output4.lel2.le
+
+      expect(a(input4)).eq(output4)
     })
 
   })
