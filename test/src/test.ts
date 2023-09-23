@@ -945,17 +945,198 @@ describe("core", () => {
 
     })
 
-    test("prototype poisoning protection", () => {
-      const against = sani(new OBJECT(Boolean, stringStartsWith("lel")))
 
-      const input1 = Object.create(null)
-      input1.lel1 = false
-      input1.__proto__ = {lel123: false}
+    describe("prototype poisoning protection", () => {
+      test("flat", () => {
+        const against = sani(new OBJECT(Boolean, stringStartsWith("lel")))
 
-      expect(against(input1)).eq({lel1: false})
-      expect(against(input1).lel123).eq(undefined)
-      expect("lel123" in against(input1)).eq(false)
+        const input1 = Object.create(null)
+        input1.lel1 = false
+        input1.__proto__ = {lel123: false}
+  
+        expect(against(input1)).eq({lel1: false})
+        expect(against(input1).lel123).eq(undefined)
+        expect("lel123" in against(input1)).eq(false)
+        expect(Object.keys(against(input1)).length).eq(1)
+        expect(against(({}))).eq({})
+        expect(({} as any).lel123).eq(undefined)
+
+
+        const input2 = Object.create(null)
+        input2.lel1 = false
+        input2.lel2 = "false"
+        input2.__proto__ = {lel123: false}
+  
+        expect(() => against(input2)).toThrow()
+        expect(against(({}))).eq({})
+        expect(({} as any).lel123).eq(undefined)
+
+
+
+
+        const input3 = Object.create(null)
+        input3.lel1 = false
+        input3.__proto__ = {le123: false, qwe: "asd"}
+  
+        expect(against(input3)).eq({lel1: false})
+        expect(against(input3).le123).eq(undefined)
+        expect(against(input3).qwe).eq(undefined)
+        expect("le123" in against(input3)).eq(false)
+        expect(Object.keys(against(input3)).length).eq(1)
+        expect(against(({}))).eq({})
+        expect(({} as any).le123).eq(undefined)
+        expect(({} as any).qwe).eq(undefined)
+      })
+
+      test("soft", () => {
+        const against = sani(new OBJECT(Boolean, true))
+  
+        const input1 = Object.create(null)
+        input1.lel1 = false
+        input1.lel2 = "false"
+        input1.__proto__ = {lel123: false}
+  
+        expect(against(input1)).eq({lel1: false})
+        expect(against(input1).lel123).eq(undefined)
+        expect("lel123" in against(input1)).eq(false)
+        expect(Object.keys(against(input1)).length).eq(1)
+
+        expect(against(({}))).eq({})
+        expect(({} as any).lel123).eq(undefined)
+      })
+
+
+      test("deep", () => {
+        const against = sani(new OBJECT(Boolean, false, true))
+  
+        const payload = Object.create(null)
+        payload.lel1 = false
+        payload.__proto__ = {lel123: false}
+  
+        const input1 = {
+          qwe: {
+            whoop: true,
+            payload
+          },
+          lel1: false
+        }
+
+        input1.qwe.payload.wham = input1.qwe
+        input1.qwe.payload.wham2 = input1
+        // @ts-ignore
+        input1.qwe2 = input1
+        // @ts-ignore
+        input1.qwe2.qwe.ref = input1
+        
+        const out1 = cloneKeys(input1)
+  
+  
+        expect(against(input1)).eq(out1)
+        expect(against(input1).lel123).eq(undefined)
+        expect("lel123" in against(input1)).eq(false)
+        expect(Object.keys(against(input1).qwe.payload).length).eq(3)
+
+        expect(against(({}))).eq({})
+        expect(({} as any).lel123).eq(undefined)
+
+
+  
+        const payload2 = Object.create(null)
+        payload2.__proto__ = {lel123: true, what: "qwqwe"}
+  
+        const input2 = {
+          qwe: {
+            whoop: true,
+            payload2
+          },
+          lel1: false
+        }
+
+        input2.qwe.payload2.wham = input2.qwe
+        input2.qwe.payload2.wham2 = input2
+        // @ts-ignore
+        input2.qwe2 = input2
+        // @ts-ignore
+        input2.qwe2.qwe.ref = input2
+        
+        const out2 = cloneKeys(input2)
+  
+  
+        expect(against(input2)).eq(out2)
+        expect(Object.keys(against(input2).qwe.payload2).length).eq(2 )
+
+        expect(against(({}))).eq({})
+        expect(({} as any).lel123).eq(undefined)
+
+
+
+        const payload3 = Object.create(null)
+        payload3.lel = "wqe"
+        payload3.__proto__ = {lel123: false}
+  
+        const input3 = {
+          qwe: {
+            whoop: true,
+            payload3
+          },
+          lel1: false
+        }
+
+        input3.qwe.payload3.wham = input3.qwe
+        input3.qwe.payload3.wham2 = input3
+        // @ts-ignore
+        input3.qwe2 = input3
+        // @ts-ignore
+        input3.qwe2.qwe.ref = input3
+        
+  
+  
+        expect(() => against(input3)).toThrow()
+
+        expect(against(({}))).eq({})
+        expect(({} as any).lel123).eq(undefined)
+      })
+
+      test("deep and soft", () => {
+        const against = sani(new OBJECT(Boolean, true, true))
+  
+
+        const payload3 = Object.create(null)
+        payload3.lel = "wqe"
+        payload3.__proto__ = {lel123: false}
+  
+        const input3 = {
+          qwe: {
+            whoop: true,
+            payload3
+          },
+          lel1: false
+        }
+
+        input3.qwe.payload3.wham = input3.qwe
+        input3.qwe.payload3.wham2 = input3
+        // @ts-ignore
+        input3.qwe2 = input3
+        // @ts-ignore
+        input3.qwe2.qwe.ref = input3
+        
+  
+        const output3 = cloneKeys(input3)
+        delete output3.qwe.payload3.lel
+  
+        expect(against(input3)).eq(output3)
+        expect(Object.keys(against(input3).qwe.payload3).length).eq(2)
+
+        expect(against(({}))).eq({})
+        expect(({} as any).lel123).eq(undefined)
+
+        
+      })
     })
+
+    
+
+    
 
     test("Deep", () => {
 
@@ -1531,6 +1712,9 @@ describe("core", () => {
 
       expect(a(input4)).eq(output4)
     })
+
+
+
 
   })
 
