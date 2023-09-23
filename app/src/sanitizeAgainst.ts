@@ -156,15 +156,15 @@ abstract class BooleanCombinator extends Combinator {
 
 
 
-type SanitizeTuple<Tuple extends Pattern[]> = {
-  [key in keyof Tuple]: Sanitized<Tuple[key]>
+type SanitizeTuple<Tuple extends (Pattern | unknown)[], Output extends boolean> = {
+  [key in keyof Tuple]: Tuple[key] extends Pattern ? Sanitized<Tuple[key], Output> : unknown
 }
 
 type FilterOutAnyTuple<Tuple extends Pattern[]> = {
-  [key in keyof Tuple]: IsAny<Tuple[key]> extends true ? never : Tuple[key]
+  [key in keyof Tuple]: IsAny<Tuple[key]> extends true ? unknown : Tuple[key]
 }
 
-type FMay<As extends Pattern[]> = ((f1: TupleToIntersection<SanitizeTuple<FilterOutAnyTuple<As>>>) => any) | NOT<(a: TupleToIntersection<SanitizeTuple<FilterOutAnyTuple<As>>>) => unknown>
+type FMay<As extends Pattern[], Output extends boolean = true> = ((f1: TupleToIntersection<SanitizeTuple<FilterOutAnyTuple<As>, Output>>) => any) | NOT<(a: TupleToIntersection<SanitizeTuple<FilterOutAnyTuple<As>, Output>>) => unknown>
 
 
 type IsAny<T> = 0 extends (1 & T) ? true : false
@@ -407,7 +407,7 @@ type EscapeQuestionmarkProps<Ob> = {[key in keyof Ob as key extends string ? Esc
 
 type DeepOBJECT<ValArg extends Pattern, KeyArg extends PossibleKeyPatterns, Output extends boolean> = {[key in Sanitized<KeyArg, Output>]: Sanitized<ValArg> | DeepOBJECT<ValArg, KeyArg, Output>}
 
-type ParseIfCombinator<Val extends Prim, Output extends boolean> = Val extends AND<infer _0, infer _1, infer _2, infer _3, infer _4, infer _5, infer _6, infer _7, infer _8, infer _9, infer Args> ? TupleToIntersection<SanitizeTuple<Args>> : Val extends OR<infer Arg> ? AWAITED<any> extends Arg[number] ? Output extends true ? Promise<Awaited<Sanitized<Arg[number], Output>>> : Sanitized<Arg[number], Output> : Sanitized<Arg[number], Output> : Val extends NOT<infer _, infer Arg> ? Exclude<Inp, Sanitized<Arg, Output>> : Val extends CONST<infer Arg> ? Arg : Val extends AWAITED<infer Arg> ? Promise<Sanitized<Arg, Output> extends Promise<any> ? Awaited<Sanitized<Arg, Output>> : Sanitized<Arg, Output>> : Val extends OBJECT<infer ValArg, infer KeyArg, infer Deep> ? Deep extends false ? {[key in Sanitized<KeyArg, Output>]: Sanitized<ValArg>} : DeepOBJECT<ValArg, KeyArg, Output> : Val
+type ParseIfCombinator<Val extends Prim, Output extends boolean> = Val extends AND<infer _0, infer _1, infer _2, infer _3, infer _4, infer _5, infer _6, infer _7, infer _8, infer _9, infer Args> ? TupleToIntersection<SanitizeTuple<Args, Output>> : Val extends OR<infer Arg> ? AWAITED<any> extends Arg[number] ? Output extends true ? Promise<Awaited<Sanitized<Arg[number], Output>>> : Sanitized<Arg[number], Output> : Sanitized<Arg[number], Output> : Val extends NOT<infer _, infer Arg> ? Exclude<Inp, Sanitized<Arg, Output>> : Val extends CONST<infer Arg> ? Arg : Val extends AWAITED<infer Arg> ? Promise<Sanitized<Arg, Output> extends Promise<any> ? Awaited<Sanitized<Arg, Output>> : Sanitized<Arg, Output>> : Val extends OBJECT<infer ValArg, infer KeyArg, infer Deep> ? Deep extends false ? {[key in Sanitized<KeyArg, Output>]: Sanitized<ValArg>} : DeepOBJECT<ValArg, KeyArg, Output> : Val
 type ParseVal<Val extends Prim, Output extends boolean> = Val extends typeof Number ? number : Val extends typeof String ? string : Val extends typeof Boolean ? boolean : Val extends Matcher ? ParseIfCombinator<Val, Output> : Val extends {new(...a:any[]): infer I} ? I : Val extends number ? number : Val extends string ? string : Val extends boolean ? boolean : Val extends ((a: infer Inp) => infer Out) ? Output extends true ? Out : Inp : Val
 type ParseValOb<Ob extends {[key in string]: Prim}, Output extends boolean> = RemovePropsByValue<{[key in keyof Ob]: Ob[key] extends PrimWithDefault ? never : ParseVal<Ob[key], Output>}, never> & RemovePropsByValue<{[key in keyof Ob]?: Ob[key] extends PrimWithDefault ? Ob[key] : never}, never>
 
@@ -427,6 +427,11 @@ type TupleToIntersection<T extends any[]> = (T extends [infer Head, ...infer Res
 export default sanitize
 
 
+const ll = sanitize(new AND(new OR(String, Number), (qwe) => {
+  return qwe + ""
+}, (qwe) => {
+
+}))
 
 
 export function ensure<T>(validate: (input: T) => boolean, msg?: string | ((input: T) => string)) {
