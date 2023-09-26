@@ -141,7 +141,6 @@ describe("core", () => {
     expect(sani(Object)({test: "test"})).eq({test: "test"})
 
     expect(() => sani(Object)("test")).toThrow()
-    expect(() => sani(Object)([])).toThrow()
   })
 
   test("function requirement default", () => {
@@ -830,47 +829,94 @@ describe("core", () => {
   })
 
 
-  describe("Arbitrary instanceof check", () => {
-    test("Promise usage", () => {
-      const a = sani(Promise)
-      expect.assertions(2)
+  describe("Instanceof check", () => {
+    describe("Arbitrary", () => {
+      test("Promise usage", () => {
+        const a = sani(Promise)
+        expect.assertions(2)
+  
+        expect(a(Promise.resolve(2))).toBeInstanceOf(Promise)
+        expect(() => a(2)).toThrow()
+      })
+  
+      test("Array usage", () => {
+        const a = sani(Array)
+  
+        expect(a([])).toBeInstanceOf(Array)
+        expect(a([1,2,"3"])).eq([1,2,"3"])
+        expect(() => a(2)).toThrow()
+        expect(() => a({})).toThrow()
+      })
+  
+      test("Object usage", () => {
+        const a = sani(Object)
+  
+        expect(a({})).toBeInstanceOf(Object)
+        expect(a({lel: 2, qwe: "qwe"})).eq({lel: 2, qwe: "qwe"})
+        expect(a(Number)).toBeInstanceOf(Object)
+        expect(a(Number)).toBe(Number)
+        expect(a(Array)).toBeInstanceOf(Object)
+        expect(a(Array)).toBe(Array)
+        expect(a(Promise)).toBeInstanceOf(Object)
+        expect(a(Promise)).toBe(Promise)
+        const numNormal = Number(2)
+        expect(() => a(numNormal)).toThrow()
+        expect(() => a(numNormal)).toThrow()
+        expect(() => a(numNormal)).toThrow()
 
-      expect(a(Promise.resolve(2))).toBeInstanceOf(Promise)
-      expect(() => a(2)).toThrow()
+
+        const numOb = new Number(2)
+        expect(a(numOb)).toBeInstanceOf(Object)
+        expect(a(numOb)).toBeInstanceOf(Number)
+        expect(a(numOb)).toBe(numOb)
+  
+        const ar = [1,2,"3",false]
+        expect(a(ar)).toBeInstanceOf(Object)
+        expect(a(ar)).toBeInstanceOf(Array)
+        expect(a(ar)).toBe(ar)
+  
+        const prom = Promise.resolve(2)
+        expect(a(prom)).toBeInstanceOf(Object)
+        expect(a(prom)).toBeInstanceOf(Promise)
+        expect(a(prom)).toBe(prom)
+        
+        expect(() => a(2)).toThrow()
+        expect(() => a(false)).toThrow()
+        expect(() => a("2")).toThrow()
+        expect(() => a(Symbol("2"))).toThrow()
+        expect(() => a(null)).toThrow()
+        expect(() => a(undefined)).toThrow()
+      })
+  
+      test("Custom class usage", () => {
+        class Custom {}
+        const a = sani(Custom)
+  
+        expect(a(new Custom())).toBeInstanceOf(Custom)
+        expect(() => a(new Promise(() => {}))).toThrow()
+        expect(() => a(2)).toThrow()
+      })
     })
-
-    test("Array usage", () => {
-      const a = sani(Array)
-      expect.assertions(3)
-
-      expect(a([])).toBeInstanceOf(Array)
-      expect(() => a(2)).toThrow()
-      expect(() => a({})).toThrow()
-    })
-
-    test("Object usage", () => {
-      const a = sani(Object)
-      expect.assertions(2)
-
-      expect(a({})).toBeInstanceOf(Object)
-      expect(() => a(2)).toThrow()
-    })
-
-    test("Custom class usage", () => {
-      class Custom {}
-      const a = sani(Custom)
-      expect.assertions(2)
-
-      expect(a(new Custom())).toBeInstanceOf(Custom)
-      expect(() => a(2)).toThrow()
-    })
-
-
   })
 
 
   describe("Mapped object", () => {
-    test("Basic usage", () => {
+    test("Plain object", () => {
+      const a = sani(new OBJECT())
+
+      expect(a({})).eq({})
+      expect(a({lel: 2, qwe: "qwe"})).eq({lel: 2, qwe: "qwe"})
+      expect(() => a(new Promise(() => {}))).toThrow()
+      expect(() => a(2)).toThrow()
+      expect(() => a(null)).toThrow()
+      expect(() => a(undefined)).toThrow()
+      expect(() => a(Number(2))).toThrow()
+      expect(() => a(new class A{})).toThrow()
+      expect(() => a([1,2,3])).toThrow()
+
+    })
+
+    test("Value usage", () => {
       const against = sani(new OBJECT(Number))
 
       expect(against({lel: 2, qwe: 3, hasdh: 212321})).eq({lel: 2, qwe: 3, hasdh: 212321})

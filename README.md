@@ -6,7 +6,7 @@ Sanitize Against is a library for sanitizing objects, intended to filter the opt
 
 * If you want to filter out unwanted properties from objects. Thus preventing [`__proto__` poisoning](https://medium.com/intrinsic-blog/javascript-prototype-poisoning-vulnerabilities-in-the-wild-7bc15347c96). 
 
-* If you want a simple way to implement defaults properties or set the others as required to enforce a certain structure.
+* If you want a simple way to implement default properties or set the others as required to enforce a certain structure.
 
 * If you want to sanitize your object's properties, to be of a certain type (e.g. number) and/or have a certain value range (e.g. 0-100).
 

@@ -47,7 +47,7 @@ type PossibleKeyPatterns = Pattern & (((key: string) => string) | Combinator | C
 
 
 
-const isObjectSani = sanitizeRec(Object)
+
 export class OBJECT<ValuePattern extends Pattern, KeyPattern extends PossibleKeyPatterns, Deep extends boolean = false> extends Matcher {
   protected get [fromInstanceSym]() {return "OBJECT"}
   private saniValue: Function
@@ -56,8 +56,8 @@ export class OBJECT<ValuePattern extends Pattern, KeyPattern extends PossibleKey
   private keyPattern: KeyPattern
   private deep: boolean
   constructor(valuePattern: ValuePattern, soft: boolean, deep?: Deep) 
-  constructor(valuePattern: ValuePattern, keyPattern?: KeyPattern, soft?: boolean, deep?: Deep) 
-  constructor(private valuePattern: ValuePattern, keyPattern_soft: KeyPattern = (a => a) as any, soft_deep = false, deep = false) {
+  constructor(valuePattern?: ValuePattern, keyPattern?: KeyPattern, soft?: boolean, deep?: Deep) 
+  constructor(private valuePattern: ValuePattern = (a => a) as any, keyPattern_soft: KeyPattern = (a => a) as any, soft_deep = false, deep = false) {
     super()
     if (typeof keyPattern_soft === "boolean") {
       this.keyPattern = (a => a) as any
@@ -77,7 +77,8 @@ export class OBJECT<ValuePattern extends Pattern, KeyPattern extends PossibleKey
     this.saniValue = sanitizeRec(this.valuePattern)
   }
   protected matches(input: unknown): unknown {
-    isObjectSani(input)
+    const proto = Object.getPrototypeOf(input)
+    if (!(typeof input === "object" && input !== null && (proto === null || proto.constructor === Object))) throw new Error("Input is not a plain object")
     if (knownInputObjects.has(input as any)) return knownInputObjects.get(input as any)
     const out = {}
     knownInputObjects.set(input as any, out)
@@ -241,10 +242,10 @@ export class OR<Arg extends Pattern[], Pat extends Arg[number] = Arg[number]> ex
           }
           catch(e) {}
         }
-        throw new Error("No match")
+        throw new Error("All awaited patterns failed")
       })
     }
-    throw new Error("No match")
+    throw new Error("All patterns failed")
   }
 
   addPattern(pat: Pattern) {
@@ -334,8 +335,8 @@ function sanitizeRec<Pat extends Pattern>(pattern: Pat) {
     against[fromInstanceSym] = pattern
   }
   else if (pattern === Object) against = (input) => {
-    if (typeof input !== "object" || input === null || input instanceof Array) throw new Error('Input is not an object')
-    return input
+    if (input instanceof Object || (typeof input === "object" && input !== null)) return input
+    else throw new Error('Input is not instanceof object')
   }
   // It is important that this check is after all the constructor checks like if (input === Boolean)
   else if (pattern instanceof Function) {
@@ -454,5 +455,9 @@ export const numberLikeStringPattern = new AND(
 
 export function stringStartsWith<S extends string>(s: S) {
   return ensure((input: `${S}${string}`) => input.startsWith(s), `Input must start with ${s}`)
+}
+
+export function numericRange(lowerBound: number, upperBound: number) {
+  return ensure((input: number) => input >= lowerBound && input <= upperBound, `Input must be between ${lowerBound} and ${upperBound}`)
 }
 
