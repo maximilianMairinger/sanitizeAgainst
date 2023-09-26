@@ -428,12 +428,6 @@ type TupleToIntersection<T extends any[]> = (T extends [infer Head, ...infer Res
 export default sanitize
 
 
-const ll = sanitize(new AND(new OR(String, Number), (qwe) => {
-  return qwe + ""
-}, (qwe) => {
-
-}))
-
 
 export function ensure<T>(validate: (input: T) => boolean, msg?: string | ((input: T) => string)) {
   return (input: T) => {
