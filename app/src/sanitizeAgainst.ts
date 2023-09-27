@@ -455,3 +455,11 @@ export function numericRange(lowerBound: number, upperBound: number) {
   return ensure((input: number) => input >= lowerBound && input <= upperBound, `Input must be between ${lowerBound} and ${upperBound}`)
 }
 
+export const nonEmptyStringPattern = new AND(String, ensure((input: string) => input !== "", "Input must be a non-empty string"))
+
+export const any = (a: unknown) => a
+
+export const unknown = (a: unknown) => {
+  if (a === undefined || a === null) throw new Error("Input must not be undefined or null")
+  else return a
+}

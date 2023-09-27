@@ -7,6 +7,6 @@ import { expect } from "./mockJest"
 
   // const a = sani(new OBJECT(new OR(Boolean, Number, String), false, true))
     
-  // a(new Promise(() => {}))
+  // a({w: new Promise(() => {})})
   
 })()
