@@ -77,9 +77,7 @@ export class OBJECT<ValuePattern extends Pattern, KeyPattern extends PossibleKey
     this.saniValue = sanitizeRec(this.valuePattern)
   }
   protected matches(input: unknown): unknown {
-    // what about `input = null` here?
-    const proto = Object.getPrototypeOf(input)
-    if (!(typeof input === "object" && input !== null && (proto === null || proto.constructor === Object))) throw new Error("Input is not a plain object")
+    if (!(typeof input === "object" && input !== null && (Object.getPrototypeOf(input) === null || Object.getPrototypeOf(input).constructor === Object))) throw new Error("Input is not a plain object")
     if (knownInputObjects.has(input as any)) return knownInputObjects.get(input as any)
     const out = {}
     knownInputObjects.set(input as any, out)
@@ -364,7 +362,7 @@ function sanitizeRec<Pat extends Pattern>(pattern: Pat) {
 
     against = (input) => {
       if (input === null || input === undefined) input = {}
-      else if (typeof input !== "object" || input instanceof Array) throw new Error('Input is not an object')
+      else if (typeof input !== "object" || !(Object.getPrototypeOf(input) === null || Object.getPrototypeOf(input).constructor === Object)) throw new Error('Input is not a plain object')
       if (knownInputObjects.has(input as any)) return knownInputObjects.get(input as any)
       const out = Object.create(null)
       knownInputObjects.set(input as any, out)
