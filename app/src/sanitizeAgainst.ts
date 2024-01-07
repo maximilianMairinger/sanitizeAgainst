@@ -20,7 +20,7 @@ declare global {
 }
 
 
-function isConstructor(f: Function) {
+export function isConstructor(f: Function) {
   return f.prototype !== undefined
 }
 
@@ -77,6 +77,7 @@ export class OBJECT<ValuePattern extends Pattern, KeyPattern extends PossibleKey
     this.saniValue = sanitizeRec(this.valuePattern)
   }
   protected matches(input: unknown): unknown {
+    // what about `input = null` here?
     const proto = Object.getPrototypeOf(input)
     if (!(typeof input === "object" && input !== null && (proto === null || proto.constructor === Object))) throw new Error("Input is not a plain object")
     if (knownInputObjects.has(input as any)) return knownInputObjects.get(input as any)
