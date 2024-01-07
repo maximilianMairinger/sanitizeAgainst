@@ -119,6 +119,9 @@ describe("core", () => {
     expect(sani({test: "test"})({})).eq({test: "test"})
     expect(sani({})(null)).eq({})
     expect(sani({test: "test"})(null)).eq({test: "test"})
+    expect(sani({})(undefined)).eq({})
+    expect(sani({test: "test", q: 2})(undefined)).eq({test: "test", q: 2})
+    expect(sani({test: "test", q: 2})({test: undefined, q: null})).eq({test: "test", q: 2})
   })
 
   test("spesific object default type with spesific value", () => {
@@ -132,6 +135,17 @@ describe("core", () => {
     expect(() => sani({test: "test"})([])).toThrow()
   })
 
+  test("spesific object requires plain object", () => {
+    expect(sani({test: "test"})({})).eq({test: "test"})
+    expect(sani({test: "test"})(Object.create(null))).eq({test: "test"})
+    expect(Object.getPrototypeOf(sani({test: "test"})(Object.create(null)))).eq(Object.prototype)
+    expect(sani({test: "test"})((() => {let o = Object.create(null); o.test1 = 0; o.test = "lel"; return o})())).eq({test: "lel"})
+    expect(() => sani({test: "test"})((() => {let o = Object.create(null); o.test = 0; return o})())).toThrow()
+    expect(() => sani({test: "test"})(new class A{})).toThrow()
+    expect(() => sani({test: "test"})(new class A{public test = "lel"})).toThrow()
+    expect(() => sani({test: "test"})([])).toThrow()
+  })
+
   test("Unspesific object requirement default", () => {
     expect(() => sani(Object)(undefined)).toThrow()
     expect(() => sani(Object)(null)).toThrow()
@@ -139,9 +153,35 @@ describe("core", () => {
 
   test("Unspesific object requirement with spesific value", () => {
     expect(sani(Object)({test: "test"})).eq({test: "test"})
+    expect(sani(Object)({test: "test", q: 2})).eq({test: "test", q: 2})
 
     expect(() => sani(Object)("test")).toThrow()
+    expect(() => sani(Object)(2)).toThrow()
   })
+
+  test("Unspesific object null prototype passes", () => {
+    expect(sani(Object)({})).eq({})
+    expect(sani(Object)(Object.create(null))).eq(Object.create(null))
+    expect(Object.getPrototypeOf(sani(Object)(Object.create(null)))).toEqual(null)
+    expect(Object.getPrototypeOf(sani(Object)({}))).toEqual(Object.prototype)
+    expect(sani(Object)((() => {let o = Object.create(null); o.test1 = 0; o.test = "lel"; return o})())).eq({test: "lel", test1: 0})
+    expect(sani(Object)((() => {let o = Object.create(null); o.test = 1; return o})())).eq({test: 1})
+  })
+
+
+  test("Unspesific object can be superclass", () => {
+    class A{}
+    expect(sani(Object)(new A)).eq({})
+    expect(sani(Object)(new class B{public test = "lel"})).eq({test: "lel"})
+    expect(sani(Object)(new A)).toBeInstanceOf(A)
+    expect(sani(Object)(new A)).toBeInstanceOf(Object)
+    expect(sani(Object)([])).eq([])
+    expect(sani(Object)(["qwe"])).eq(["qwe"])
+    expect(sani(Object)(["qwe"])).eq(["qwe"])
+    expect(sani(Object)(["qwe"])).toBeInstanceOf(Array)
+  })
+
+  
 
   test("function requirement default", () => {
     expect(sani((input) => {return 2})()).eq(2)
