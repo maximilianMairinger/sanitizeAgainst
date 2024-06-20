@@ -458,6 +458,12 @@ export const numberLikeStringPattern = new AND(
   s => s + ""
 )
 
+export const numberLikePattern = new AND(
+  new OR(String, Number),
+  ensure((input: string | number) => !isNaN(+input), (input) => errorMsg + "NaN (parsed from \"" + input + "\")"), 
+  s => +s
+)
+
 export function stringStartsWith<S extends string>(s: S) {
   return ensure((input: `${S}${string}`) => input.startsWith(s), `Input must start with ${s}`)
 }
