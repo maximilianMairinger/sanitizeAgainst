@@ -349,7 +349,7 @@ function sanitizeRec<Pat extends Pattern>(pattern: Pat, globalErrorMsg?: string 
     if (knownPatternObjects.has(pattern)) return knownPatternObjects.get(pattern) 
 
     const requiredPattern = new Map<any, any>()
-    const optinalPattern = new Map<any, any>()
+    const optionalPattern = new Map<any, any>()
     for (const key in pattern) {
       const numberOfQuestionmarks = getNumberOfQuestionmarksAtTheEndOfString(key);
       let questionMarksToRemove = -Math.floor(numberOfQuestionmarks/2);
@@ -357,7 +357,7 @@ function sanitizeRec<Pat extends Pattern>(pattern: Pat, globalErrorMsg?: string 
       if (!isEvan) questionMarksToRemove--;
       const keyWithoutQuestionmarks = questionMarksToRemove !== 0 ? key.slice(0, questionMarksToRemove) : key;
       
-      (isEvan ? requiredPattern : optinalPattern).set(keyWithoutQuestionmarks, sanitizeRec(pattern[key] as any))
+      (isEvan ? requiredPattern : optionalPattern).set(keyWithoutQuestionmarks, sanitizeRec(pattern[key] as any))
     }
 
     against = (input) => {
@@ -369,11 +369,26 @@ function sanitizeRec<Pat extends Pattern>(pattern: Pat, globalErrorMsg?: string 
 
       for (const [key, nestedAgainst] of requiredPattern) {
         const val = input[key] === undefined || Object.hasOwn(input as object, key) ? input[key] : undefined
-        out[key] = nestedAgainst(val)
+        try {
+          out[key] = nestedAgainst(val)
+        }
+        catch(e) {
+          e.message = `Error in key "${key}":\n\n${e.message}`
+          throw e
+        }
+        
       }
 
-      for (const [key, nestedAgainst] of optinalPattern) {
-        if (Object.hasOwn(input as object, key)) out[key] = nestedAgainst(input[key])
+      for (const [key, nestedAgainst] of optionalPattern) {
+        if (Object.hasOwn(input as object, key)) {
+          try {
+            out[key] = nestedAgainst(input[key])
+          }
+          catch(e) {
+            e.message = `Error in key "${key}":\n\n${e.message}`
+            throw e
+          }
+        }
       }
 
       // do this e.g. for equals functions. Some implementations (e.g. fast-equals) check constructor for equality
@@ -391,7 +406,7 @@ function sanitizeRec<Pat extends Pattern>(pattern: Pat, globalErrorMsg?: string 
       return against(input) as any
     }
     catch(e) {
-      if (errorMsg !== undefined) console.error(errorMsg instanceof Function ? errorMsg(input) : errorMsg + "\n\n")
+      if (errorMsg !== undefined) e.message = `${errorMsg instanceof Function ? errorMsg(input) : errorMsg}\n\nStack:\n${e.message}`
       throw e
     }
   }
