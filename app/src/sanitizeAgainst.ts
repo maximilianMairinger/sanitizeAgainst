@@ -111,7 +111,7 @@ export class AWAITED<Pat extends Pattern> extends Matcher {
     return this._pattern instanceof AWAITED ? this._pattern.pattern : this._pattern
   }
   protected matches(input: unknown): unknown {
-    isPromiseSani(input)
+    isPromiseSani(input as any)
     const myKnownInputObjects = knownInputObjects
     return (input as Promise<any>).then((input) => {
       knownInputObjects = myKnownInputObjects
@@ -303,20 +303,20 @@ function againstPrimitive(type: string) {
 
 let knownPatternObjects: WeakMap<object, (input: unknown) => unknown>
 let knownInputObjects: WeakMap<object, object>
-function sanitize<Pat extends Pattern>(pattern: Pat) {
+function sanitize<Pat extends Pattern>(pattern: Pat, errorMsg?: string | ((a: any) => string)) {
   knownPatternObjects = new WeakMap()
-  const out = sanitizeRec(pattern)
+  const out = sanitizeRec(pattern, errorMsg)
   knownPatternObjects = null
-  return (input: Sanitized<Pat, false>): Sanitized<Pat, true> => {
+  return (input: Sanitized<Pat, false>, errorMsg?: string | ((a: any) => string)): Sanitized<Pat, true> => {
     knownInputObjects = new WeakMap()
-    const out2 = out(input)
+    const out2 = out(input, errorMsg)
     knownInputObjects = null
     return out2 as Sanitized<Pat, true>
   }
 }
 
 
-function sanitizeRec<Pat extends Pattern>(pattern: Pat) {
+function sanitizeRec<Pat extends Pattern>(pattern: Pat, globalErrorMsg?: string | ((a: any) => string)) {
   let against: (input: unknown) => unknown
 
   const type = typeof pattern
@@ -386,8 +386,17 @@ function sanitizeRec<Pat extends Pattern>(pattern: Pat) {
   }
 
   
-
-  return against as (input: Sanitized<Pat, false>) => Sanitized<Pat, true>
+  const againstWrapper = (input: Sanitized<Pat, false>, errorMsg: string | ((a: any) => string) | undefined = globalErrorMsg): Sanitized<Pat, true> => {
+    try {
+      return against(input) as any
+    }
+    catch(e) {
+      if (errorMsg !== undefined) console.error(errorMsg instanceof Function ? errorMsg(input) : errorMsg + "\n\n")
+      throw e
+    }
+  }
+  if (against[fromInstanceSym]) againstWrapper[fromInstanceSym] = against[fromInstanceSym]
+  return againstWrapper
 }
 
 

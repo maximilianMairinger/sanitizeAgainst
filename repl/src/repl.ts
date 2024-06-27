@@ -5,8 +5,13 @@ import { expect } from "./mockJest"
 
 (async () => {
 
-  // const a = sani(new OBJECT(new OR(Boolean, Number, String), false, true))
-    
-  // a({w: new Promise(() => {})})
+  let against = sani(new OR(new AWAITED(Number), String))
+
+  // expect(against(Promise.resolve(3))).toBeInstanceOf(Promise)
+  expect(against("asd")).toBeInstanceOf(Promise)
+  // expect(await against(Promise.resolve(3))).eq(3)
+  // expect(async () => await against(4)).rejects.toThrow()
+  // expect(async () => await against(Promise.resolve("qwe"))).rejects.toThrow()
+  // expect(await against("asd")).eq("asd")
   
 })()
