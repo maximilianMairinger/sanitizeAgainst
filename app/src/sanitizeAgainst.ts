@@ -373,7 +373,7 @@ function sanitizeRec<Pat extends Pattern>(pattern: Pat, globalErrorMsg?: string 
           out[key] = nestedAgainst(val)
         }
         catch(e) {
-          e.message = `Error in key "${key}":\n\n${e.message}`
+          e.message = `Regarding "${key}":\n${e.message}`
           throw e
         }
         
@@ -385,7 +385,7 @@ function sanitizeRec<Pat extends Pattern>(pattern: Pat, globalErrorMsg?: string 
             out[key] = nestedAgainst(input[key])
           }
           catch(e) {
-            e.message = `Error in key "${key}":\n\n${e.message}`
+            e.message = `Regarding "${key}":\n${e.message}`
             throw e
           }
         }
@@ -406,7 +406,7 @@ function sanitizeRec<Pat extends Pattern>(pattern: Pat, globalErrorMsg?: string 
       return against(input) as any
     }
     catch(e) {
-      if (errorMsg !== undefined) e.message = `${errorMsg instanceof Function ? errorMsg(input) : errorMsg}\n\nStack:\n${e.message}`
+      if (errorMsg !== undefined) e.message = `${errorMsg instanceof Function ? errorMsg(input) : errorMsg}\n\n${e.message}`
       throw e
     }
   }
