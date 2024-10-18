@@ -1,5 +1,5 @@
 import cloneKeys from "circ-clone"
-import sani, { AND, OR, NOT, AWAITED, OBJECT, ensure, stringStartsWith, numberLikeStringPattern } from "../../app/src/sanitizeAgainst"
+import sani, { AND, OR, NOT, AWAITED, OBJECT, ensure, stringStartsWith, numberLikeStringPattern, regex, unknown, any, nonEmptyStringPattern, numericRange, numberLikePattern } from "../../app/src/sanitizeAgainst"
 import "./extend"
 
 
@@ -1825,6 +1825,251 @@ describe("core", () => {
 
     expect(e("lel2")).eq("lel2")
     expect(() => e("lel")).toThrow()
+  })
+
+
+  describe("utils", () => {
+    test("unknown", () => {
+      const r = sani(unknown)
+
+      expect(r(2)).eq(2)
+      expect(r("2")).eq("2")
+      expect(r(false)).eq(false)
+      expect(r({})).eq({})
+      expect(r({qwe: 2})).eq({qwe: 2})
+      expect(r([])).eq([])
+      expect(() => r(null)).toThrow()
+      expect(() => r(undefined)).toThrow()
+
+      const r2 = sani({
+        "a?": unknown,
+        b: "lel"
+      })
+
+      expect(r2({a: 2, b: "qwe"})).eq({a: 2, b: "qwe"})
+      expect(r2({a: "qwe"})).eq({a: "qwe", b: "lel"})
+      expect(r2({})).eq({b: "lel"})
+      expect(r2({b: "qwe"})).eq({b: "qwe"})
+      expect(() => r2({a: undefined})).toThrow()
+      expect(() => r2({a: null})).toThrow()
+    })
+
+    test("any", () => {
+      const r = sani(any)
+
+      expect(r(2)).eq(2)
+      expect(r("2")).eq("2")
+      expect(r(false)).eq(false)
+      expect(r({})).eq({})
+      expect(r({qwe: 2})).eq({qwe: 2})
+      expect(r([])).eq([])
+      expect(r(null)).eq(null)
+      expect(r(undefined)).eq(undefined)
+
+      const r2 = sani({
+        "a?": any,
+        b: "lel"
+      })
+
+      expect(r2({a: 2, b: "qwe"})).eq({a: 2, b: "qwe"})
+      expect(r2({a: "qwe"})).eq({a: "qwe", b: "lel"})
+      expect(r2({})).eq({b: "lel"})
+      expect(r2({a: undefined})).eq({a: undefined, b: "lel"})
+      expect(r2({a: null})).eq({a: null, b: "lel"})
+    })
+
+    test("nonEmptyStringPattern", () => {
+      const r = sani(nonEmptyStringPattern)
+
+      expect(r("2")).eq("2")
+      expect(r("qwe")).eq("qwe")
+      expect(r(" ")).eq(" ")
+      expect(() => r("")).toThrow()
+      expect(() => r(null)).toThrow()
+      expect(() => r(2)).toThrow()
+      expect(() => r(String)).toThrow()
+      expect(() => r(String)).toThrow()
+    })
+
+    test("numericRange", () => {
+      const r = sani(numericRange(2, 4))
+
+      expect(r(2)).eq(2)
+      expect(r(3)).eq(3)
+      expect(r(4)).eq(4)
+      expect(() => r(1)).toThrow()
+      expect(() => r(-3)).toThrow()
+      expect(() => r(5)).toThrow()
+      expect(() => r("2")).toThrow()
+      expect(() => r(null)).toThrow()
+      expect(() => r(undefined)).toThrow()
+
+      expect(() => sani(numericRange(4, 2))).toThrow()
+    })
+
+    test("stringStartsWith", () => {
+      const r = sani(stringStartsWith("lel"))
+
+      expect(r("lel")).eq("lel")
+      expect(r("lel2")).eq("lel2")
+      expect(() => r("qlelwe")).toThrow()
+      expect(() => r("qlel")).toThrow()
+      expect(() => r("qelel")).toThrow()
+      expect(() => r("qwe")).toThrow()
+      expect(() => r(2)).toThrow()
+      expect(() => r({})).toThrow()
+    })
+
+    test("numberLikePattern", () => {
+      const r = sani(numberLikePattern)
+
+      expect(r("2")).eq(2)
+      expect(r("+2")).eq(2)
+      expect(r("-2")).eq(-2)
+      expect(r("Infinity")).eq(Infinity)
+      expect(r("-Infinity")).eq(-Infinity)
+      expect(r("1e1")).eq(10)
+      expect(r("100e0")).eq(100)
+      expect(r("2.2")).eq(2.2)
+      expect(r("2.2e2")).eq(2.2e2)
+      expect(r("2.2e-2")).eq(2.2e-2)
+      expect(r("2.2e+2")).eq(2.2e+2)
+
+      expect(r(2)).eq(2)
+      expect(r(Infinity)).eq(Infinity)
+
+      expect(() => r("")).toThrow()
+      expect(() => r("2.2e+2qwe")).toThrow()
+      expect(() => r("p2")).toThrow()
+      expect(() => r("2px")).toThrow()
+      expect(() => r("2e")).toThrow()
+      expect(() => r(NaN)).toThrow()
+    })
+
+    test("numberLikeStringPattern", () => {
+      const r = sani(numberLikeStringPattern)
+
+      expect(r("2")).eq("2")
+      expect(r("+2")).eq("+2")
+      expect(r("-2")).eq("-2")
+      expect(r("Infinity")).eq("Infinity")
+      expect(r("-Infinity")).eq("-Infinity")
+      expect(r("1e1")).eq("1e1")
+      expect(r("100e0")).eq("100e0")
+      expect(r("2.2")).eq("2.2")
+      expect(r("2.2e2")).eq("2.2e2")
+      expect(r("2.2e-2")).eq("2.2e-2")
+      expect(r("2.2e+2")).eq("2.2e+2")
+
+      expect(r(2)).eq("2")
+      expect(r(Infinity)).eq("Infinity")
+
+      expect(() => r("")).toThrow()
+      expect(() => r("2.2e+2qwe")).toThrow()
+      expect(() => r("p2")).toThrow()
+      expect(() => r("2px")).toThrow()
+      expect(() => r("2e")).toThrow()
+      expect(() => r(NaN)).toThrow()
+    })
+
+    describe("using two utils with same inheritance", () => {
+      test("numberLikePattern with numberLikePatternString", () => {
+        const rn = sani(numberLikePattern)
+        const rs = sani(numberLikeStringPattern)
+
+        expect(rn("2")).eq(2)
+        expect(rn("+2")).eq(2)
+        expect(rn("-2")).eq(-2)
+        expect(rn("Infinity")).eq(Infinity)
+        expect(rs("2")).eq("2")
+        expect(rs("+2")).eq("+2")
+        expect(rs("-2")).eq("-2")
+        expect(rs("Infinity")).eq("Infinity")
+        expect(rs("-Infinity")).eq("-Infinity")
+        expect(rs("1e1")).eq("1e1")
+        expect(rs("100e0")).eq("100e0")
+        expect(rn("-Infinity")).eq(-Infinity)
+        expect(rn("1e1")).eq(10)
+        expect(rn("100e0")).eq(100)
+        expect(rn("2.2")).eq(2.2)
+        expect(rs("2.2")).eq("2.2")
+        expect(rs("2.2e2")).eq("2.2e2")
+        expect(rs("2.2e-2")).eq("2.2e-2")
+        expect(rs("2.2e+2")).eq("2.2e+2")
+        expect(rn("2.2e2")).eq(2.2e2)
+        expect(rn("2.2e-2")).eq(2.2e-2)
+        expect(rn("2.2e+2")).eq(2.2e+2)
+
+        expect(rn(2)).eq(2)
+        expect(() => rs("")).toThrow()
+        expect(() => rs("2.2e+2qwe")).toThrow()
+        expect(() => rs("p2")).toThrow()
+        expect(() => rs("2px")).toThrow()
+        expect(rn(Infinity)).eq(Infinity)
+
+        expect(() => rn("")).toThrow()
+        expect(() => rn("2.2e+2qwe")).toThrow()
+        expect(() => rn("p2")).toThrow()
+        expect(rs(2)).eq("2")
+        expect(rs(Infinity)).eq("Infinity")
+        expect(() => rn("2px")).toThrow()
+        expect(() => rn("2e")).toThrow()
+        expect(() => rs("2e")).toThrow()
+        expect(() => rs(NaN)).toThrow()
+        expect(() => rn(NaN)).toThrow()
+
+        
+        
+
+        
+        
+
+        
+
+        
+        
+      })
+    })
+
+
+    describe("regex", () => {
+      test("basic regex", () => {
+        const r = sani(regex(/lel/i))
+  
+        expect(r("qwelelqwe")).eq("qwelelqwe")
+        expect(() => r("qweleqwe")).toThrow()
+        expect(() => r("leqwleel")).toThrow()
+        expect(r("abcabclel")).eq("abcabclel")
+        expect(r("lelabc")).eq("lelabc")
+
+        expect(r("LeLabc")).eq("LeLabc")
+        expect(r("LELabc")).eq("LELabc")
+        expect(r("leLabc")).eq("leLabc")
+      })
+
+      test("global flag still stateless", () => {
+        const r = sani(regex(/lel/g))
+  
+        expect(r("qwelelqwe")).eq("qwelelqwe")
+        expect(() => r("qweleqwe")).toThrow()
+        expect(() => r("leqwleel")).toThrow()
+        expect(r("abcabclel")).eq("abcabclel")
+        expect(r("lelabc")).eq("lelabc")
+      })
+
+      test("sticky flag still stateless", () => {
+        const r = sani(regex(/lel/y))
+  
+        expect(r("lelqwe")).eq("lelqwe")
+        expect(() => r("qweleqwe")).toThrow()
+        expect(() => r("leqwleel")).toThrow()
+        expect(() => r("abcabclel")).toThrow()
+        expect(r("lelabc")).eq("lelabc")
+      })
+    })
+    
+
+   
   })
 
 })
