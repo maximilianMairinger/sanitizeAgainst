@@ -516,6 +516,7 @@ export function regex(regex: RegExp, msg?: string | ((a: string) => string)) {
   if (regex.flags.includes('g') || regex.flags.includes('y')) {
     console.warn(`Warning: The regex ${regex} has global ('g') or sticky ('y') flags set, which may cause stateful behavior.`);
   }
+  console.log(regex)
   return ensure((input: string) => {
     regex.lastIndex = 0; // Reset lastIndex to ensure stateless behavior
     return regex.test(input)

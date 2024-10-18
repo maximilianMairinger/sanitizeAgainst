@@ -2036,6 +2036,9 @@ describe("core", () => {
       test("basic regex", () => {
         const r = sani(regex(/lel/i))
   
+        expect(() => r(2)).toThrow()
+        expect(() => r(null)).toThrow()
+        expect(() => r({qwe: 2})).toThrow()
         expect(r("qwelelqwe")).eq("qwelelqwe")
         expect(() => r("qweleqwe")).toThrow()
         expect(() => r("leqwleel")).toThrow()
