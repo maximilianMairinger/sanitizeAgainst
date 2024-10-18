@@ -475,25 +475,32 @@ export function matches<T>(pattern: (input: T) => unknown) {
 
 
 const errorMsg = "Input must be of type number or a numberlike string, but is " 
-export const numberLikeStringPattern = new AND(
+
+const numberLikeCommon = new AND(
   new OR(String, Number),
   ensure((input: string | number) => input !== "", errorMsg + "an empty string"), 
   ensure((input: string | number) => !isNaN(+input), (input) => errorMsg + "NaN (parsed from \"" + input + "\")"), 
+)
+
+// this is separate because there is some information lost when converting to number and then back to string. E.g. "1.0" => 1 or "+1" => 1 or "1e1" => 1
+export const numberLikeStringPattern = new AND(
+  numberLikeCommon,
   s => s + ""
 )
 
 export const numberLikePattern = new AND(
-  new OR(String, Number),
-  ensure((input: string | number) => !isNaN(+input), (input) => errorMsg + "NaN (parsed from \"" + input + "\")"), 
+  numberLikeCommon,
   s => +s
 )
+
 
 export function stringStartsWith<S extends string>(s: S) {
   return ensure((input: `${S}${string}`) => input.startsWith(s), `Input must start with ${s}`)
 }
 
 export function numericRange(lowerBound: number, upperBound: number) {
-  return ensure((input: number) => input >= lowerBound && input <= upperBound, `Input must be between ${lowerBound} and ${upperBound}`)
+  if (lowerBound > upperBound) throw new Error("The lower bound must be less than or equal to the upper bound")
+  return new AND(Number, ensure((input: number) => input >= lowerBound && input <= upperBound, `Input must be between ${lowerBound} and ${upperBound}`))
 }
 
 export const nonEmptyStringPattern = new AND(String, ensure((input: string) => input !== "", "Input must be a non-empty string"))
@@ -503,4 +510,14 @@ export const any = (a: unknown) => a
 export const unknown = (a: unknown) => {
   if (a === undefined || a === null) throw new Error("Input must not be undefined or null")
   else return a
+}
+
+export function regex(regex: RegExp, msg?: string | ((a: string) => string)) {
+  if (regex.flags.includes('g') || regex.flags.includes('y')) {
+    console.warn(`Warning: The regex ${regex} has global ('g') or sticky ('y') flags set, which may cause stateful behavior.`);
+  }
+  return ensure((input: string) => {
+    regex.lastIndex = 0; // Reset lastIndex to ensure stateless behavior
+    return regex.test(input)
+  }, msg ?? `Input must match the regex ${regex}`)
 }
