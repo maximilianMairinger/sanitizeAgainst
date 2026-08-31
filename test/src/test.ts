@@ -1828,6 +1828,83 @@ describe("core", () => {
   })
 
 
+  // Re-entrant use of sanitize: an `against` running while another one is already running.
+  // `each` and `someEnsure` do this internally, but it is reachable from userland too, simply by
+  // calling an `against` from within a custom function pattern.
+  describe("Nested sanitize", () => {
+    test("custom function pattern calling another against", () => {
+      const inner = sani({a: String})
+      const r = sani({x: (i) => inner(i), other: {a: String}})
+
+      expect(r({x: {a: "b"}, other: {a: "c"}})).eq({x: {a: "b"}, other: {a: "c"}})
+    })
+
+    test("nested against still filters unknown props", () => {
+      const inner = sani({a: String})
+      const r = sani({x: (i) => inner(i), other: {a: String}})
+
+      expect(r({x: {a: "b", nope: 1}, other: {a: "c", nope: 2}})).eq({x: {a: "b"}, other: {a: "c"}})
+    })
+
+    test("sanitize invoked during the outer invocation", () => {
+      const r = sani({x: (i) => sani(String)(i), other: {a: String}})
+
+      expect(r({x: "b", other: {a: "c"}})).eq({x: "b", other: {a: "c"}})
+    })
+
+    test("three levels deep", () => {
+      const l3 = sani({c: String})
+      const l2 = sani({b: (i) => l3(i), other3: {z: String}})
+      const l1 = sani({a: (i) => l2(i), other2: {z: String}})
+
+      expect(l1({a: {b: {c: "deep"}, other3: {z: "3"}}, other2: {z: "2"}}))
+        .eq({a: {b: {c: "deep"}, other3: {z: "3"}}, other2: {z: "2"}})
+    })
+
+    test("nested against does not break the enclosing shared reference tracking", () => {
+      const inner = sani({a: String})
+      const shared = {a: "x"}
+      const out = sani({p: {a: String}, viaFn: (i) => inner(i), q: {a: String}})({p: shared, viaFn: {a: "y"}, q: shared})
+
+      expect(out).eq({p: {a: "x"}, viaFn: {a: "y"}, q: {a: "x"}})
+      // the input had one object under both p and q, so the output must too
+      expect(out.p).toBe(out.q)
+    })
+
+    test("caught nested failure does not break the enclosing shared reference tracking", () => {
+      const strict = sani({a: String})
+      const fallback = (i) => {
+        try { return strict(i) }
+        catch (e) { return {a: "fallback"} }
+      }
+      const shared = {a: "keep"}
+      const out = sani({p: {a: String}, viaFn: fallback, q: {a: String}})({p: shared, viaFn: {a: 999}, q: shared})
+
+      expect(out).eq({p: {a: "keep"}, viaFn: {a: "fallback"}, q: {a: "keep"}})
+      expect(out.p).toBe(out.q)
+    })
+
+    test("throwing nested against leaves the sanitizer reusable", () => {
+      const inner = sani({a: String})
+      const r = sani({x: (i) => inner(i), other: {a: String}})
+
+      expect(() => r({x: {a: 2}, other: {a: "b"}})).toThrow()
+      expect(r({x: {a: "b"}, other: {a: "c"}})).eq({x: {a: "b"}, other: {a: "c"}})
+    })
+
+    test("nested sanitize during pattern construction", () => {
+      const shared = {a: String}
+      const pattern: any = {one: shared}
+      // the getter runs while the outer pattern is being compiled, nesting a sanitize into that compilation
+      Object.defineProperty(pattern, "mid", {enumerable: true, get() { return each(String) }})
+      pattern.two = shared
+
+      expect(sani(pattern)({one: {a: "x"}, mid: ["z"], two: {a: "y"}}))
+        .eq({one: {a: "x"}, mid: ["z"], two: {a: "y"}})
+    })
+  })
+
+
   describe("Arrays", () => {
     describe("each", () => {
       test("unspesific primitive entries", () => {
