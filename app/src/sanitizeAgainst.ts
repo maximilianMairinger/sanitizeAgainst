@@ -304,14 +304,20 @@ function againstPrimitive(type: string) {
 let knownPatternObjects: WeakMap<object, (input: unknown) => unknown>
 let knownInputObjects: WeakMap<object, object>
 function sanitize<Pat extends Pattern>(pattern: Pat, errorMsg?: string | ((a: any) => string)) {
+  // restore instead of nulling, so that a nested sanitize (e.g. via each) does not tear down the state of the enclosing one
+  const outerKnownPatternObjects = knownPatternObjects
   knownPatternObjects = new WeakMap()
   const out = sanitizeRec(pattern, errorMsg)
-  knownPatternObjects = null
+  knownPatternObjects = outerKnownPatternObjects
   return (input: Sanitized<Pat, false>, errorMsg?: string | ((a: any) => string)): Sanitized<Pat, true> => {
+    const outerKnownInputObjects = knownInputObjects
     knownInputObjects = new WeakMap()
-    const out2 = out(input, errorMsg)
-    knownInputObjects = null
-    return out2 as Sanitized<Pat, true>
+    try {
+      return out(input, errorMsg) as Sanitized<Pat, true>
+    }
+    finally {
+      knownInputObjects = outerKnownInputObjects
+    }
   }
 }
 
@@ -471,6 +477,37 @@ export function matches<T>(pattern: (input: T) => unknown) {
     }
   }
 }
+
+const saniArray = sanitize(Array)
+
+const resolveMsg = (msg: string | ((...a: any[]) => string) | undefined, ...args: any[]) => msg instanceof Function ? msg(...args) : msg
+
+const checkSingleArrayEntry = (sani: any, input: any, msg?: string | ((input: any, index: number) => string)) => (val, ind) => {
+  const resolved = resolveMsg(msg, input, ind)
+  return sani(val, resolved === undefined ? `At index ${ind}:` : `At index ${ind}: ${resolved}`)
+}
+export function each(pattern: Pattern, msg?: string | ((input: any, index: number) => string)) {
+  const sani = sanitize(pattern)
+  return (input: unknown[]) => {
+    return saniArray(input).map(checkSingleArrayEntry(sani, input, msg))
+  }
+}
+
+/*
+ * Important: This function does NOT do replacement! The outputs will be disregarded
+ */
+export function someEnsure(validate: (input: any) => boolean, msg?: string | ((input: any) => string)) {
+  const validateF = (val: any) => validate(val) // dropping the msg
+  return ensure((input: unknown[]) => {
+    return saniArray(input).some(checkSingleArrayEntry(validateF, input, msg))
+  }, (input) => {
+    const resolved = resolveMsg(msg, input)
+    const base = "Input array must have at least one element that passes the validation."
+    return resolved === undefined ? base : `${base} ${resolved}`
+  })
+}
+
+
 
 
 

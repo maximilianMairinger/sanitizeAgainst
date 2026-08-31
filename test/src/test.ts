@@ -1,5 +1,5 @@
 import cloneKeys from "circ-clone"
-import sani, { AND, OR, NOT, AWAITED, OBJECT, ensure, stringStartsWith, numberLikeStringPattern, regex, unknown, any, nonEmptyStringPattern, numericRange, numberLikePattern } from "../../app/src/sanitizeAgainst"
+import sani, { AND, OR, NOT, AWAITED, OBJECT, ensure, stringStartsWith, numberLikeStringPattern, regex, unknown, any, nonEmptyStringPattern, numericRange, numberLikePattern, each, someEnsure } from "../../app/src/sanitizeAgainst"
 import "./extend"
 
 
@@ -1825,6 +1825,240 @@ describe("core", () => {
 
     expect(e("lel2")).eq("lel2")
     expect(() => e("lel")).toThrow()
+  })
+
+
+  describe("Arrays", () => {
+    describe("each", () => {
+      test("unspesific primitive entries", () => {
+        const r = sani(each(String))
+
+        expect(r([])).eq([])
+        expect(r(["lel"])).eq(["lel"])
+        expect(r(["lel", "lel2"])).eq(["lel", "lel2"])
+
+        expect(() => r(["lel", 2])).toThrow()
+        expect(() => r([2])).toThrow()
+        expect(() => r([undefined])).toThrow()
+        expect(() => r([null])).toThrow()
+        expect(() => r([["lel"]])).toThrow()
+      })
+
+      test("input must be an array", () => {
+        const r = sani(each(String))
+
+        expect(() => r("lel")).toThrow()
+        expect(() => r(2)).toThrow()
+        expect(() => r({})).toThrow()
+        expect(() => r({0: "lel", length: 1})).toThrow()
+        expect(() => r(null)).toThrow()
+        expect(() => r(undefined)).toThrow()
+      })
+
+      test("entries with default", () => {
+        const r = sani(each(0))
+
+        expect(r([])).eq([])
+        expect(r([undefined, null, 2])).eq([0, 0, 2])
+        expect(() => r(["2"])).toThrow()
+      })
+
+      test("object entries get filtered", () => {
+        const r = sani(each({name: String, "age?": Number, isCool: false}))
+
+        expect(r([])).eq([])
+        expect(r([{name: "lel", lelel: "gets filtered"}])).eq([{name: "lel", isCool: false}])
+        expect(r([{name: "lel", age: 2}, {name: "lel2", isCool: true}])).eq([{name: "lel", age: 2, isCool: false}, {name: "lel2", isCool: true}])
+
+        expect(() => r([{name: "lel"}, {}])).toThrow()
+        expect(() => r([{name: 2}])).toThrow()
+      })
+
+      test("combinator entries", () => {
+        const r = sani(each(new OR(String, Number)))
+
+        expect(r(["lel", 2])).eq(["lel", 2])
+        expect(() => r(["lel", true])).toThrow()
+
+        const r2 = sani(each(new AND(Number, ensure((n: number) => n > 0, "Must be positive"))))
+
+        expect(r2([1, 2])).eq([1, 2])
+        expect(() => r2([1, 0])).toThrow()
+      })
+
+      test("nested each", () => {
+        const r = sani(each(each(Number)))
+
+        expect(r([])).eq([])
+        expect(r([[], [1], [2, 3]])).eq([[], [1], [2, 3]])
+
+        expect(() => r([[1], 2])).toThrow()
+        expect(() => r([[1], ["2"]])).toThrow()
+      })
+
+      test("returns a new array without mutating the input", () => {
+        const e = sani(each(0))
+        const input = [undefined, 2]
+        const output = e(input)
+
+        expect(output).eq([0, 2])
+        expect(input).eq([undefined, 2])
+        expect(output === (input as any)).eq(false)
+        expect(Array.isArray(output)).eq(true)
+      })
+
+      test("error message contains the offending index", () => {
+        const r = sani(each(String))
+
+        expect(() => r(["lel", "lel2", 2])).toThrowError(/At index 2:/)
+        expect(() => r([2])).toThrowError(/At index 0:/)
+        // no custom msg given means no "undefined" leaking into the message
+        expect(() => r([2])).not.toThrowError(/undefined/)
+      })
+
+      test("custom error message", () => {
+        const r = sani(each(String, "Tags must be strings"))
+
+        expect(r(["lel"])).eq(["lel"])
+        expect(() => r([2])).toThrowError(/At index 0: Tags must be strings/)
+
+        const r2 = sani(each(String, (input, index) => `Entry ${index} of ${input.length} is bad`))
+
+        expect(r2(["lel"])).eq(["lel"])
+        expect(() => r2(["lel", 2])).toThrowError(/At index 1: Entry 1 of 2 is bad/)
+      })
+
+      describe("as part of objects", () => {
+        test("required and optional array property", () => {
+          const r = sani({tags: each(String), "ids?": each(Number)})
+
+          expect(r({tags: []})).eq({tags: []})
+          expect(r({tags: ["lel"], ids: [1, 2]})).eq({tags: ["lel"], ids: [1, 2]})
+          expect(r({tags: ["lel"], lelel: "gets filtered"})).eq({tags: ["lel"]})
+
+          expect(() => r({})).toThrow()
+          expect(() => r({tags: ["lel"], ids: ["1"]})).toThrow()
+          expect(() => r({tags: "lel"})).toThrow()
+        })
+
+        test("does not break sibling object patterns", () => {
+          const r = sani({tags: each(String), settings: {darkMode: false}, "nested?": {lel: Number}})
+
+          expect(r({tags: ["lel"], settings: {}})).eq({tags: ["lel"], settings: {darkMode: false}})
+          expect(r({tags: [], settings: {darkMode: true}, nested: {lel: 2}})).eq({tags: [], settings: {darkMode: true}, nested: {lel: 2}})
+          expect(() => r({tags: ["lel"], settings: {darkMode: 2}})).toThrow()
+        })
+
+        test("does not break sibling object patterns when deeply nested", () => {
+          const r = sani({lel: {tags: each({name: String})}, lel2: {lelel: {lel: Number}}})
+
+          expect(r({lel: {tags: [{name: "lel"}]}, lel2: {lelel: {lel: 2}}})).eq({lel: {tags: [{name: "lel"}]}, lel2: {lelel: {lel: 2}}})
+          expect(() => r({lel: {tags: [{}]}, lel2: {lelel: {lel: 2}}})).toThrow()
+        })
+
+        test("error message mentions the key and the index", () => {
+          const r = sani({tags: each(String)})
+
+          expect(() => r({tags: ["lel", 2]})).toThrowError(/Regarding "tags":/)
+          expect(() => r({tags: ["lel", 2]})).toThrowError(/At index 1:/)
+        })
+      })
+    })
+
+
+    describe("someEnsure", () => {
+      test("passes when at least one entry validates", () => {
+        const r = sani(someEnsure((s) => s === "lel"))
+
+        expect(r(["lel"])).eq(["lel"])
+        expect(r(["lel2", "lel"])).eq(["lel2", "lel"])
+        expect(r(["lel", "lel2"])).eq(["lel", "lel2"])
+
+        expect(() => r(["lel2"])).toThrow()
+        expect(() => r(["lel2", "lelel"])).toThrow()
+      })
+
+      test("empty array never passes", () => {
+        expect(() => sani(someEnsure(() => true))([])).toThrow()
+      })
+
+      test("input must be an array", () => {
+        const r = sani(someEnsure(() => true))
+
+        expect(() => r("lel")).toThrow()
+        expect(() => r(2)).toThrow()
+        expect(() => r({})).toThrow()
+        expect(() => r(null)).toThrow()
+        expect(() => r(undefined)).toThrow()
+      })
+
+      test("does not replace, the input is passed through as is", () => {
+        const r = sani(someEnsure((s) => typeof s === "string"))
+        const input = ["lel", 2, {lelel: "not filtered"}]
+
+        expect(r(input)).eq(["lel", 2, {lelel: "not filtered"}])
+        expect(r(input) === (input as any)).eq(true)
+      })
+
+      test("a throwing validate function propagates", () => {
+        const r = sani(someEnsure((s) => {
+          if (typeof s !== "string") throw new Error("lel")
+          return true
+        }))
+
+        expect(r(["lel"])).eq(["lel"])
+        // the throw wins over the "some" semantics, even though a later entry would have passed
+        expect(() => r([2, "lel"])).toThrowError(/lel/)
+      })
+
+      test("custom error message", () => {
+        const r = sani(someEnsure((s) => s === "lel", "At least one lel is required"))
+
+        expect(r(["lel"])).eq(["lel"])
+        expect(() => r(["lel2"])).toThrowError(/At least one lel is required/)
+
+        const r2 = sani(someEnsure((s) => s === "lel", (input) => `None of the ${input.length} entries is a lel`))
+
+        expect(() => r2(["lel2", "lelel"])).toThrowError(/None of the 2 entries is a lel/)
+      })
+
+      test("no custom error message does not leak undefined", () => {
+        const r = sani(someEnsure(() => false))
+
+        expect(() => r(["lel"])).toThrowError(/at least one element/)
+        expect(() => r(["lel"])).not.toThrowError(/undefined/)
+      })
+
+      test("combined with each", () => {
+        const r = sani(new AND(each(Number), someEnsure((n) => n > 5)))
+
+        expect(r([1, 6])).eq([1, 6])
+        expect(r([6])).eq([6])
+
+        expect(() => r([1, 2])).toThrow()
+        expect(() => r(["1", 6])).toThrow()
+      })
+
+      describe("as part of objects", () => {
+        test("required and optional array property", () => {
+          const r = sani({tags: someEnsure((s) => s === "lel"), "ids?": someEnsure((n) => n === 2)})
+
+          expect(r({tags: ["lel"], ids: [1, 2]})).eq({tags: ["lel"], ids: [1, 2]})
+          expect(r({tags: ["lel2", "lel"]})).eq({tags: ["lel2", "lel"]})
+
+          expect(() => r({})).toThrow()
+          expect(() => r({tags: ["lel2"]})).toThrow()
+          expect(() => r({tags: ["lel"], ids: [1]})).toThrow()
+        })
+
+        test("does not break sibling object patterns", () => {
+          const r = sani({tags: someEnsure((s) => s === "lel"), settings: {darkMode: false}})
+
+          expect(r({tags: ["lel"], settings: {}})).eq({tags: ["lel"], settings: {darkMode: false}})
+          expect(() => r({tags: ["lel2"], settings: {}})).toThrow()
+        })
+      })
+    })
   })
 
 

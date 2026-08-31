@@ -20,13 +20,13 @@ Sanitize Against is a library for sanitizing objects, intended to filter the opt
 ### ESM
 
 ```ts
-import sanitize, { OR, AND, NOT } from "sanitize-against"
+import sanitize, { OR, AND, NOT, each, someEnsure } from "sanitize-against"
 ```
 
 ### CJS
 
 ```ts
-const { sanitize, OR, AND, NOT } = require("sanitize-against")
+const { sanitize, OR, AND, NOT, each, someEnsure } = require("sanitize-against")
 ```
 
 # Usage
@@ -345,7 +345,108 @@ against({
 
 ### Arrays
 
-Not supported yet.
+#### each
+
+`each` takes a pattern and applies it to every entry of an array. The input must be an actual array (array-likes are rejected), otherwise it throws. It returns a **new** array containing the sanitized entries, leaving the input untouched.
+
+```ts
+const pattern = each(String)
+
+const against = sanitize(pattern)
+
+against(["a", "b"]) // ["a", "b"]
+against([]) // []
+against(["a", 2]) // throws
+against("a") // throws (not an array)
+against(undefined) // throws
+```
+
+Any pattern works as the entry pattern, including [defaults](#primitive-defaults), [objects](#objects), [combinators](#combinators) and `each` itself.
+
+```ts
+const against = sanitize(each({
+  name: String,
+  "age?": Number,
+  isCool: false
+}))
+
+against([
+  { name: "John", somethingElse: "which will be ignored" },
+  { name: "Jane", age: 20, isCool: true }
+])
+// [{ name: "John", isCool: false }, { name: "Jane", age: 20, isCool: true }]
+```
+
+```ts
+sanitize(each(each(Number)))([[1, 2], [3]]) // [[1, 2], [3]]
+sanitize(each(0))([undefined, 5]) // [0, 5]
+sanitize(each(OR(String, Number)))(["a", 1]) // ["a", 1]
+```
+
+Of course it can be used as part of an object pattern, and the property can be made [optional](#optional-properties) as usual.
+
+```ts
+const against = sanitize({
+  tags: each(String),
+  "ids?": each(Number)
+})
+
+against({ tags: ["a"], ids: [1, 2] }) // { tags: ["a"], ids: [1, 2] }
+against({ tags: [] }) // { tags: [] }
+against({}) // throws
+```
+
+The error message of a failing entry is prefixed with its index. Optionally you can pass a second argument to add your own message; either a string or a function receiving the whole input array and the index of the offending entry.
+
+```ts
+sanitize(each(String))(["a", 2])
+// throws: At index 1: ... Input is not a string
+
+sanitize(each(String, "Tags must be strings"))(["a", 2])
+// throws: At index 1: Tags must be strings ... Input is not a string
+
+sanitize(each(String, (input, index) => `Entry ${index} of ${input.length} is bad`))(["a", 2])
+// throws: At index 1: Entry 1 of 2 is bad ... Input is not a string
+```
+
+#### someEnsure
+
+`someEnsure` takes a validation function returning a boolean (rather than a [pattern](#patterns), which would signal failure by throwing) and passes if **at least one** entry of the array satisfies it. As with `each`, the input must be an actual array.
+
+> Important: `someEnsure` does **not** replace anything. The return values of the validation function are only used as a boolean, and the input array is passed through as is. Use it to assert something about an array, and [`AND`](#and) it together with `each` if you also want the entries sanitized.
+
+```ts
+const pattern = someEnsure((tag) => tag === "admin")
+
+const against = sanitize(pattern)
+
+against(["user", "admin"]) // ["user", "admin"] (the very same array)
+against(["user"]) // throws
+against([]) // throws (an empty array has no passing element)
+against("admin") // throws (not an array)
+```
+
+The second argument appends your own message to the thrown error; either a string or a function receiving the input array.
+
+```ts
+sanitize(someEnsure((tag) => tag === "admin", "At least one admin is required"))(["user"])
+// throws: Input array must have at least one element that passes the validation. At least one admin is required
+```
+
+Note that the validation function is expected to return a boolean. If it throws instead, that error propagates immediately, even if a later entry would have passed.
+
+Combine it with `each` to both sanitize the entries and assert a property of the array as a whole.
+
+```ts
+const against = sanitize(AND(
+  each(Number),
+  someEnsure((n) => n > 5)
+))
+
+against([1, 6]) // [1, 6]
+against([1, 2]) // throws (none is greater than 5)
+against(["1", 6]) // throws (not all are numbers)
+```
 
 
 ## Polyfills
