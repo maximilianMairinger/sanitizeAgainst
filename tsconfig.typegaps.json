@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "module": "ES2020",
+    "target": "ES2020",
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "lib": ["ES2022", "DOM"],
+    "noEmit": true,
+    "noEmitOnError": false,
+    "strict": false,
+    // strictNullChecks is the setting that surfaces these gaps, and it is on in
+    // every `strict: true` project — i.e. the default for new consumers. With it
+    // OFF the conditional types collapse to `any`, so the output silently has no
+    // type safety at all rather than the wrong type; see the note in typeGaps.ts.
+    "strictNullChecks": true,
+    "noUnusedLocals": false
+  },
+  "include": ["test/src/typeGaps.ts"]
+}

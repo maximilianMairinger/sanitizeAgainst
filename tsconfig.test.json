@@ -9,5 +9,11 @@
     "skipLibCheck": true,
     "lib": ["ES2022"]
   },
-  "include": ["test/src", "app/src"]
+  "include": ["test/src", "app/src"],
+  // typeGaps.ts is checked on its own by `npm run test:types`, against the built
+  // declarations and with strictNullChecks on. Excluded here so the test build
+  // does not depend on app/dist existing.
+  // typeCrash.fixture.ts is SA-32: type-checking it aborts the compiler, so it
+  // is excluded from every build. See the comment at the top of that file.
+  "exclude": ["test/src/typeGaps.ts", "test/src/typeCrash.fixture.ts"]
 }

@@ -4,15 +4,15 @@ import commonJS from '@rollup/plugin-commonjs'
 import json from '@rollup/plugin-json'
 
 
-export default {
-  input: 'test/src/test.ts',
+const bundle = (input, file) => ({
+  input,
   output: {
-    file: 'test/dist/test.js',
+    file,
     format: 'cjs',
     sourcemap: true
   },
   plugins: [
-    typescript({tsconfig: "./tsconfig.test.json", noEmitOnError: false, sourceMap: true}), 
+    typescript({tsconfig: "./tsconfig.test.json", noEmitOnError: false, sourceMap: true}),
     resolve({modulesOnly: true, preferBuiltins: true}),
     commonJS({
       include: 'node_modules/**'
@@ -21,5 +21,12 @@ export default {
   ],
   // dont log errors
   onwarn: () => {}
-};
+})
 
+
+export default [
+  bundle('test/src/test.ts', 'test/dist/test.js'),
+  // Audit findings. Named *.test.js so jest's default testMatch picks it up as
+  // its own suite, runnable on its own with `npx jest audit`.
+  bundle('test/src/audit.ts', 'test/dist/audit.test.js'),
+]

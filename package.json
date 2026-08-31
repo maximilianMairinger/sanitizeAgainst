@@ -23,7 +23,10 @@
     "repl": "node ./repl/dist/sanitizeAgainst-repl.js",
     "start": "npm run repl",
     "buildTest": "rollup --config rollup.node.test.config.mjs",
-    "test": "npm run buildTest && jest"
+    "test": "npm run buildTest && jest",
+    "test:audit": "npm run buildTest && jest audit",
+    "test:types": "tsc -p tsconfig.prod.esm.json --emitDeclarationOnly && tsc -p tsconfig.typegaps.json",
+    "test:lib": "npm run buildTest && jest --testPathPattern \"dist/test\\.js$\""
   },
   "repository": {
     "type": "git",

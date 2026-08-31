@@ -1,0 +1,837 @@
+<html class=" povpugj idc0_350"><head><!-- frame-runtime --><base href="/_f/1788207132-ee13/"><script>window.__FRAME_PREAMBLE={"v":1,"capabilities":{"artifact":"artifact.C-rTGjvr.js","assets":"assets.8Gk803W0.js","comments":"comments.vw5vQdGA.js","db":"db.h-3sndFg.js","downloads":"downloads.C3GSvEDP.js","embed":"embed.CxGAyc-v.js","mcp":"mcp.Bvma3qD7.js","network":"network.B5UA9Su4.js","notifications":"notifications.ssU4jy7G.js","permissions":"permissions.BNySkLV5.js","room":"room.BMMoe2BY.js","sample":"sample.BW2Uysoh.js","self":"artifact.C-rTGjvr.js","user":"user.BpKav-Rf.js"},"transforms":"_transforms.DSB5x63f.js","comments":"_comments.C6E0cR5g.js","translate":"_translate.5HCW4BJh.js"}</script><script>(function(){"use strict";var te=["light","dark","system"],re=/^[A-Za-z0-9_-]{1,64}$/,$=/^[a-zA-Z_:][a-zA-Z0-9_:.-]{0,127}$/,ne=new Set(["class","hidden","value","checked","style","title","alt","placeholder","lang","dir","role","tabindex","disabled","readonly","contenteditable","open","colspan","rowspan"]);function oe(e){const t=e.toLowerCase();return t.startsWith("data-")||t.startsWith("aria-")||ne.has(t)}var Be="http://www.w3.org/1999/xhtml",se="http://www.w3.org/2000/svg",ae=new Set(["script","style","iframe","noscript","noframes","noembed","xmp","plaintext","template","title","textarea","object","embed"]),ie=new Set(["script","style"]);function ce(e){const t=e.localName.toLowerCase();return e.namespaceURI==="http://www.w3.org/1999/xhtml"?!ae.has(t):e.namespaceURI===se?!ie.has(t):!1}function M(e,t){return e===t||(e===160||e===32)&&(t===160||t===32)}function le(e,t){const r=e.length,n=t.length;let s=0;for(;s<r&&s<n&&M(e.charCodeAt(s),t.charCodeAt(s));)s++;let o=0;for(;o<r-s&&o<n-s&&M(e.charCodeAt(r-1-o),t.charCodeAt(n-1-o));)o++;return{p:s,s:o}}function ue(e,t){const r=e.firstChild;if(e.childNodes.length!==1||r===null||r.nodeType!==Node.TEXT_NODE){e.textContent=t;return}const n=r.data,s=n.length,o=t.length,{p:i,s:c}=le(n,t);i===s&&c===0&&s===o||r.replaceData(i,s-i-c,t.slice(i,o-c));const h=r.data,p=e.ownerDocument.getSelection?.()??null,w=p!==null&&p.rangeCount>0&&(p.anchorNode===r||p.focusNode===r)?{anchor:p.anchorNode,anchorOffset:p.anchorOffset,focus:p.focusNode,focusOffset:p.focusOffset}:null;let m=-1,g=-1;for(let f=0;f<h.length&&f<t.length;f++){const v=h.charCodeAt(f),b=t.charCodeAt(f);v!==b&&M(v,b)&&(m<0&&(m=f),g=f)}const a=m>=0;if(a&&r.replaceData(m,g-m+1,t.slice(m,g+1)),a&&w!==null&&w.anchor!==null&&w.focus!==null)try{p.setBaseAndExtent(w.anchor,w.anchorOffset,w.focus,w.focusOffset)}catch{}}var fe=new Set(["html","head","body","frameset"]);function de(e){return e.namespaceURI==="http://www.w3.org/1999/xhtml"&&fe.has(e.localName)}function pe(e){if(e===null||typeof e!="object")return!1;const t=e;if(typeof t.target!="string"||!re.test(t.target)||t.text!==void 0&&typeof t.text!="string")return!1;if(t.attrsSet!==void 0){if(t.attrsSet===null||typeof t.attrsSet!="object")return!1;for(const[r,n]of Object.entries(t.attrsSet))if(!$.test(r)||typeof n!="string")return!1}if(t.attrsRemoved!==void 0){if(!Array.isArray(t.attrsRemoved))return!1;for(const r of t.attrsRemoved)if(typeof r!="string"||!$.test(r))return!1}return!0}function me(e,t){if(e===null||typeof e!="object")return!1;const{seq:r,elements:n}=e;if(typeof r!="number"||!Number.isSafeInteger(r)||!Array.isArray(n)||n.length===0||n.length>64)return!1;for(let s=0;s<n.length;s++)if(!t(n[s]))return!1;return!0}function he(e){return e===null||typeof e!="object"?!1:me(e.__frame_patch,pe)}function _e(e){if(e===null||typeof e!="object")return!1;const t=e.__frame_init;return t!==null&&typeof t=="object"}function ve(e){return e!==null&&typeof e=="object"&&e.__frame_size_poke===!0}function ye(e){if(e===null||typeof e!="object")return!1;const t=e.__frame_theme;if(t===null||typeof t!="object")return!1;const r=t.theme;return typeof r=="string"&&te.includes(r)}var A=/^[\w.-]+\.js$/;function we(e,t,r){return r?"inert":typeof t=="string"&&A.test(t)?e?[t]:"inert":e?"inert":"framed"}function ge(){return{post(e,t){parent.postMessage(e,t)},on(e){const t=r=>{r.source===parent&&e(r.data,r.origin,r.isTrusted)};return addEventListener("message",t),()=>removeEventListener("message",t)}}}function be(){return{post:()=>{},on:()=>()=>{}}}var j="__frame_scroll",Ee=150,Ae=310,Se=160,Te=3e4;function ke(){let e=0,t=!1,r=!1,n=!1,s=0,o=null;const i=l=>{try{sessionStorage.setItem(j,JSON.stringify({y:l}))}catch{}},c=()=>{if(clearTimeout(e),o===null)return;const l=o;o=null,i(l)},h=()=>{if(t){t=!1;return}r=!0,o=scrollY,clearTimeout(e),e=setTimeout(c,Ee)};try{addEventListener("scroll",h,{passive:!0}),addEventListener("pagehide",c)}catch{}const p=()=>{let l;try{l=sessionStorage.getItem(j)}catch{return null}if(l===null)return null;let _;try{_=JSON.parse(l)}catch{_=null}const d=_?.y;if(!(typeof d=="number"&&Number.isFinite(d)&&d>=0)){try{sessionStorage.removeItem(j)}catch{}return null}return d};let w=!1;const m=l=>{try{const _=scrollY;scrollTo({top:l,left:0,behavior:"instant"}),s=l,n=!0,clearTimeout(e),o=null,i(l);const d=scrollY;d!==_&&(t=!0),d!==l&&!w&&(w=!0,addEventListener("load",()=>{try{if(scrollY===d){const T=p();m(T!==null?T:s)}}catch{}},{once:!0}))}catch{}},g=()=>{try{return!!location.hash}catch{return!0}};let a=!1;const f=()=>{try{if(a||innerWidth>Ae||innerHeight>Se)return;a=!0;const l=Date.now(),_=()=>{try{removeEventListener("resize",_)}catch{}if(Date.now()-l>Te||r||g())return;const d=p();m(d!==null?d:s)};addEventListener("resize",_)}catch{}};let v=!1,b=!1;return{restore(){if(v||(v=!0,g()))return;const l=p();l!==null&&(m(l),f())},promoted(){if(b||(b=!0,g()))return;const l=p();l!==null?(m(l),f()):n&&m(s)}}}function Re(e,t,r,n){let s=null;try{s=window.trustedTypes?.createPolicy("frame-runtime",{createScriptURL:h=>h})??null}catch{}const o=window.Worker,i=o?.prototype,c=Object.freeze({Worker:o,workerOn:i?.addEventListener,workerPost:i?.postMessage,workerTerminate:i?.terminate,fetch:window.fetch.bind(window),preventDefault:Event.prototype.preventDefault,policy:s,origins:t});r(e).then(h=>h?.bootTopLevel?h.bootTopLevel(c,n):n.settle()).catch(()=>n.settle())}var De="modulepreload",Ie=function(e){return"/"+e},Ue={},Le=function(t,r,n){let s=Promise.resolve();function o(i){const c=new Event("vite:preloadError",{cancelable:!0});if(c.payload=i,window.dispatchEvent(c),!c.defaultPrevented)throw i}return s.then(i=>{for(const c of i||[])c.status==="rejected"&&o(c.reason);return t().catch(o)})},Oe=window===top,q=Object.getOwnPropertyDescriptor(window,"claude"),k=we(Oe,window.__FRAME_PREAMBLE?.topLevel,q?.writable===!1),N=typeof k=="object"&&k[0],y=N?be():ge();(function(){const e=Object.defineProperty,t=globalThis,r=["RTCPeerConnection","webkitRTCPeerConnection","RTCDataChannel","RTCIceCandidate","RTCSessionDescription","RTCRtpSender","RTCRtpReceiver"];let n=0;for(let s=0;s<r.length;s++){const o=r[s];try{e(t,o,{value:void 0,writable:!1,configurable:!1})}catch{try{delete t[o]}catch{}try{e(t,o,{value:void 0,writable:!1,configurable:!0})}catch{}}typeof t[o]=="function"&&n++}if(n&&k==="framed")try{y.post({__frame_rtc_lockdown_failed:n},"*")}catch{}})();var Pe=1e4,Y=Object.freeze([...window.__FRAME_PREAMBLE?.origins??["https://claude.ai","https://preview.claude.ai"]]);function X(e){for(const t of Y)if(t.endsWith(":*"))try{const r=new URL(e);if(`${r.protocol}//${r.hostname}:*`===t)return!0}catch{}else if(e===t)return!0;return!1}var R=Object.freeze({...window.__FRAME_PREAMBLE?.capabilities}),B=window.__FRAME_PREAMBLE?.transforms,D=window.__FRAME_PREAMBLE?.comments,I=window.__FRAME_PREAMBLE?.translate;function S(e){return Le(()=>import("/_runtime/"+e),void 0)}function G(e,t){return{contract:e.contract,changes:new Set(e.changes??[]),flags:new Set(e.flags??[]),capabilities:e.capabilities??{},capBudgets:e.capBudgets??{},transforms:new Map,shellOrigin:t,mount:x,hooks:O,pipe:()=>({wrap:(r,n)=>(...s)=>{try{return n(...s)}catch(o){return Promise.reject(o)}}})}}var L=null,E=null;function V(e,t,r){try{Object.defineProperty(e,t,{value:r,writable:!1,configurable:!1,enumerable:!0})}catch{try{Object.defineProperty(e,t,{value:r,writable:!1,configurable:!0,enumerable:!0})}catch{}}}var U=!1,O={editBefore:null,edit:null};function Ce(e,t,r=!1){const n=[];let s;if(r)try{O.editBefore?.(e)}catch{}for(const o of e.elements){const i=document.querySelector(`[data-id="${o.target}"]`);if(!i){s=o.target;break}if([...Object.keys(o.attrsSet??{}),...o.attrsRemoved??[]].some(c=>!oe(c))){s=o.target;break}if(o.text!==void 0&&(!ce(i)||de(i))){s=o.target;break}for(const[c,h]of Object.entries(o.attrsSet??{}))if(!J(i,c)){try{i.setAttribute(c,h)}catch{}Z(i,c,h)}for(const c of o.attrsRemoved??[])J(i,c)||(i.removeAttribute(c),Z(i,c,null));typeof o.text=="string"&&ue(i,o.text),n.push(o.target)}if(r)try{O.edit?.(e.seq,n,s)}catch{}if(s!==void 0){y.post({__frame_patch_miss:{seq:e.seq}},t);return}try{document.dispatchEvent(new CustomEvent("claude:edit",{detail:{seq:e.seq,targets:n}}))}catch{}}function Z(e,t,r){if(!(e instanceof HTMLInputElement))return;const n=t.toLowerCase();n==="checked"?e.checked=r!==null:n==="value"&&e.type!=="file"&&(e.value=r??"")}function J(e,t){const r=t.toLowerCase(),n=e;return r==="data-id"||(r==="value"||r==="checked")&&(n.__artifactSecret===!0||/^(password|hidden|file)$/.test(n.type??"")||/(^|\s)(cc-|one-time-code|current-password|new-password)/i.test(`${e.getAttribute("autocomplete")??""} ${n.autocomplete??""}`))}function Q(e){const t=document.documentElement;e==="light"||e==="dark"?(t.dataset.theme=e,t.style.colorScheme=e,U=!0):U&&(delete t.dataset.theme,t.style.colorScheme="",U=!1)}var P=new Map;function Me(){let e;const t={u:new Promise(r=>{e=r}),r:r=>{t.done=!0,e(r)},done:!1,nulled:!1};return t}function F(){for(const e of P.values())e.done||(e.nulled=!0,e.r(null))}var je=Object.freeze(Object.assign(Object.create(null),{call:Function.prototype.call,apply:Function.prototype.apply,bind:Function.prototype.bind})),x=(e,t)=>{const r=P.get(e);if(!r||r.done){r?.nulled&&E&&y.post({__frame_cap_telemetry:{kind:"cap-load-error",cap:e}},E);return}const n=typeof t=="function"?Object.setPrototypeOf(t,je):Object.assign(Object.create(null),t);typeof n.then=="function"&&delete n.then,r.r(Object.freeze(n))};function ee(){const e=q?.value??{};V(window,"claude",e);for(const t of Object.keys(R)){if(e[t]!==void 0){V(e,t,e[t]);continue}P.set(t,Me())}if(e.use===void 0){const t=r=>{if(typeof r!="string"||!Object.hasOwn(R,r))return Promise.resolve(null);const n=P.get(r);return n?n.u:Promise.resolve(e[r]??null)};try{Object.defineProperty(e,"use",{value:t,writable:!0,configurable:!0,enumerable:!1})}catch{}}}if(k==="framed"){const e=B&&A.test(B)?S(B).catch(()=>{}):Promise.resolve(void 0),t=a=>{if(a.type==="auxclick"&&a.button!==1)return;const f=a.target,v=f&&f.closest?f.closest("a[href],area[href]"):null;if(!v)return;const b=v.getAttribute("href");if(!b)return;let l;try{l=new URL(b,document.baseURI)}catch{return}if((l.protocol==="http:"||l.protocol==="https:")&&l.origin!==location.origin){a.preventDefault();const _=(v.getAttribute("target")??"").toLowerCase(),d=a.type==="auxclick"||a.metaKey||a.ctrlKey||a.shiftKey||a.altKey||!["","_self","_top","_parent"].includes(_);y.post({__frame_nav:!0,url:l.href,newTab:d},"*")}};addEventListener("click",t,!0),addEventListener("auxclick",t,!0);const r={},n=a=>{a.isTrusted&&(r.pointer=!0)},s=a=>{a.isTrusted&&(r.click=!0)};addEventListener("pointermove",n,{capture:!0,passive:!0}),addEventListener("click",s,{capture:!0,passive:!0}),e.then(a=>{a?.wireNav&&(a.wireNav(),removeEventListener("click",t,!0),removeEventListener("auxclick",t,!0),removeEventListener("pointermove",n,!0),removeEventListener("click",s,!0),a.wireEngagement?.(r))});let o=null;try{o=ke()}catch{}ee();let i=null,c=null,h=0;const p=y.on((a,f)=>{X(f)&&_e(a)&&(i=a.__frame_init,E=f,p(),clearTimeout(h),c?.())});y.post({__frame_connect:!0},"*");const w=new Promise(a=>{c=a,h=setTimeout(()=>{p(),a()},Pe)}),m=document.readyState==="loading"?new Promise(a=>document.addEventListener("DOMContentLoaded",()=>a(),{once:!0})):Promise.resolve();m.then(()=>{try{o?.restore()}catch{}});const g={cb:null};y.on((a,f)=>{if(X(f)&&ve(a)){try{o?.promoted()}catch{}g.cb?.()}}),w.then(async()=>{if(!i||!E){F();return}Q(i.theme);const a=E;let f=!1,v=!1;y.on((u,z,C)=>{if(z!==a)return;ye(u)&&Q(u.__frame_theme.theme),he(u)&&Ce(u.__frame_patch,a,C);const H=u?.__fc_mode;H&&typeof H=="object"&&!f&&D&&A.test(D)&&(f=!0,S(D).then(K=>K.install?.(a,H.on===!0)).catch(()=>{}));const W=u?.__ft_cmd;W&&typeof W=="object"&&!v&&I&&A.test(I)&&(v=!0,S(I).then(K=>K.install?.(a,W)).catch(()=>{}))});const b=Object.keys(i.capabilities??{}).filter(u=>Object.hasOwn(R,u)).map(u=>[u,R[u]]).filter(u=>typeof u[1]=="string"&&A.test(u[1])),l=await Promise.allSettled(b.map(([,u])=>S(u))),_=await e,d=E;if(_?.buildBoot||y.post({__frame_cap_telemetry:{kind:"cap-load-error",cap:"_transforms"}},d),_?.buildBoot)try{L=_.buildBoot(i,_.TRANSFORMS??{},{shellOrigin:d,mount:x,hooks:O},u=>y.post({__frame_cap_telemetry:u},d))}catch{y.post({__frame_cap_telemetry:{kind:"cap-load-error",cap:"_transforms"}},d),L=G(i,d)}else L=G(i,d);const T=u=>y.post({__frame_cap_telemetry:{kind:"cap-load-error",cap:u}},d),Ne=L;l.forEach((u,z)=>{const C=b[z][0];if(u.status!=="fulfilled"){T(C);return}try{u.value?.install?.(Ne)}catch{T(C)}}),F(),await m,y.post({__frame_ready:!0},E),e.then(u=>u?.installSizeReporter?.(d,g))})}else N&&(ee(),Re(N,Y,S,{settle:F,mount:x}))})();</script><!-- /frame-runtime --><meta charset="utf8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found]){display:none!important}</style></head><body>
+<title>sanitize-against Audit</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&amp;family=Public+Sans:wght@400;500;600&amp;family=JetBrains+Mono:wght@400;500;700&amp;display=swap">
+
+<style>
+  :root {
+    --ground:      #F3F5F2;
+    --surface:     #FBFCFA;
+    --sunken:      #E8ECE7;
+    --ink:         #16201F;
+    --ink-soft:    #414D4A;
+    --muted:       #6B7570;
+    --rule:        #D3DAD4;
+    --rule-strong: #B4BEB7;
+    --accent:      #0E5C63;
+    --accent-soft: #DCE9E9;
+    --critical:    #9E2B25;
+    --critical-bg: #F4E2E0;
+    --high:        #8A5312;
+    --high-bg:     #F5E8D6;
+    --medium:      #4A5D2E;
+    --medium-bg:   #E6EBDC;
+    --low:         #4E5A63;
+    --low-bg:      #E4E9EC;
+    --note:        #3D5A80;
+    --note-bg:     #E1E8F0;
+    --shadow:      0 1px 2px rgba(22,32,31,.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground:      #101413;
+      --surface:     #181E1D;
+      --sunken:      #1E2524;
+      --ink:         #E3E8E4;
+      --ink-soft:    #B6BFBA;
+      --muted:       #838E88;
+      --rule:        #2A3331;
+      --rule-strong: #3D4846;
+      --accent:      #58B7BC;
+      --accent-soft: #14312F;
+      --critical:    #E68A80;
+      --critical-bg: #33191A;
+      --high:        #D6A24C;
+      --high-bg:     #2E2416;
+      --medium:      #A8C077;
+      --medium-bg:   #212917;
+      --low:         #9FB0B9;
+      --low-bg:      #1D2427;
+      --note:        #8FADCE;
+      --note-bg:     #18222E;
+      --shadow:      0 1px 2px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground:      #101413;
+    --surface:     #181E1D;
+    --sunken:      #1E2524;
+    --ink:         #E3E8E4;
+    --ink-soft:    #B6BFBA;
+    --muted:       #838E88;
+    --rule:        #2A3331;
+    --rule-strong: #3D4846;
+    --accent:      #58B7BC;
+    --accent-soft: #14312F;
+    --critical:    #E68A80;
+    --critical-bg: #33191A;
+    --high:        #D6A24C;
+    --high-bg:     #2E2416;
+    --medium:      #A8C077;
+    --medium-bg:   #212917;
+    --low:         #9FB0B9;
+    --low-bg:      #1D2427;
+    --note:        #8FADCE;
+    --note-bg:     #18222E;
+    --shadow:      0 1px 2px rgba(0,0,0,.35);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: "Public Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-size: 16px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 62rem; margin: 0 auto; padding: 4rem 1.5rem 7rem; }
+
+  /* ---------- masthead ---------- */
+  .masthead { border-bottom: 2px solid var(--ink); padding-bottom: 1.5rem; margin-bottom: 2.5rem; }
+  .eyebrow {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: .7rem; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--muted); display: flex; flex-wrap: wrap; gap: .4rem 1.25rem;
+  }
+  h1 {
+    font-family: "Newsreader", Georgia, "Times New Roman", serif;
+    font-weight: 600; font-size: clamp(2.1rem, 5vw, 3.1rem); line-height: 1.08;
+    margin: .7rem 0 .5rem; letter-spacing: -.015em; text-wrap: balance;
+  }
+  h1 .lib { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: .82em; font-weight: 500; }
+  .standfirst {
+    font-family: "Newsreader", Georgia, serif; font-size: 1.2rem; line-height: 1.55;
+    color: var(--ink-soft); max-width: 46rem; margin: 0;
+  }
+
+  /* ---------- scoreboard ---------- */
+  .tally { display: flex; flex-wrap: wrap; gap: .5rem; margin: 1.75rem 0 0; }
+  .tally-item {
+    display: flex; align-items: baseline; gap: .5rem;
+    padding: .45rem .85rem; border: 1px solid var(--rule); border-radius: 2px;
+    background: var(--surface); font-size: .78rem;
+  }
+  .tally-n { font-family: "JetBrains Mono", monospace; font-weight: 700; font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+  .tally-l { letter-spacing: .06em; text-transform: uppercase; font-size: .68rem; color: var(--muted); }
+
+  /* ---------- prose ---------- */
+  h2 {
+    font-family: "Newsreader", Georgia, serif; font-weight: 600;
+    font-size: 1.85rem; letter-spacing: -.01em; margin: 3.5rem 0 .35rem;
+    padding-top: 1.5rem; border-top: 1px solid var(--rule-strong); text-wrap: balance;
+  }
+  h2:first-of-type { margin-top: 3rem; }
+  .sec-note { color: var(--muted); font-size: .93rem; margin: 0 0 2rem; max-width: 46rem; }
+  p { max-width: 46rem; }
+  a { color: var(--accent); text-underline-offset: 2px; }
+  a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+
+  /* ---------- callout ---------- */
+  .callout {
+    background: var(--accent-soft); border-left: 3px solid var(--accent);
+    padding: 1.15rem 1.35rem; margin: 2rem 0; border-radius: 0 2px 2px 0;
+  }
+  .callout p { margin: 0; max-width: none; font-size: .95rem; }
+  .callout p + p { margin-top: .7rem; }
+  .callout strong { font-weight: 600; }
+
+  /* ---------- summary table ---------- */
+  .table-scroll { overflow-x: auto; margin: 1.5rem 0 0; border: 1px solid var(--rule); border-radius: 2px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: .84rem; min-width: 40rem; }
+  th, td { text-align: left; padding: .6rem .85rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+  thead th {
+    font-family: "JetBrains Mono", monospace; font-size: .66rem; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--muted); font-weight: 500;
+    background: var(--sunken); border-bottom: 1px solid var(--rule-strong);
+  }
+  tbody tr:last-child td { border-bottom: 0; }
+  td.id a { font-family: "JetBrains Mono", monospace; font-weight: 500; text-decoration: none; white-space: nowrap; }
+  td.id a:hover { text-decoration: underline; }
+  td.reach { color: var(--muted); font-size: .78rem; }
+
+  /* ---------- severity chips ---------- */
+  .sev {
+    display: inline-block; font-family: "JetBrains Mono", monospace;
+    font-size: .62rem; letter-spacing: .1em; text-transform: uppercase; font-weight: 700;
+    padding: .2rem .5rem; border-radius: 2px; white-space: nowrap;
+  }
+  .sev-critical { color: var(--critical); background: var(--critical-bg); }
+  .sev-high     { color: var(--high);     background: var(--high-bg); }
+  .sev-medium   { color: var(--medium);   background: var(--medium-bg); }
+  .sev-low      { color: var(--low);      background: var(--low-bg); }
+  .sev-note     { color: var(--note);     background: var(--note-bg); }
+
+  /* ---------- findings ---------- */
+  .finding { padding: 2rem 0; border-bottom: 1px solid var(--rule); scroll-margin-top: 1.5rem; }
+  .finding:last-child { border-bottom: 0; }
+  .f-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: .6rem .8rem; margin-bottom: .5rem; }
+  .f-id {
+    font-family: "JetBrains Mono", monospace; font-size: .78rem; font-weight: 700;
+    color: var(--accent); letter-spacing: .02em;
+  }
+  .f-title {
+    font-family: "Newsreader", Georgia, serif; font-weight: 600; font-size: 1.32rem;
+    line-height: 1.25; margin: 0; flex-basis: 100%; letter-spacing: -.005em; text-wrap: balance;
+  }
+  .f-body > p { margin: .5rem 0 0; }
+  .f-body > p:first-child { margin-top: 0; }
+
+  .meta { display: flex; flex-wrap: wrap; gap: .4rem 1.5rem; margin-top: 1rem; font-size: .8rem; }
+  .meta div { display: flex; gap: .45rem; }
+  .meta dt {
+    font-family: "JetBrains Mono", monospace; font-size: .64rem; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--muted); padding-top: .28rem; flex-shrink: 0;
+  }
+  .meta dd { margin: 0; color: var(--ink-soft); }
+
+  pre {
+    background: var(--sunken); border: 1px solid var(--rule); border-radius: 2px;
+    padding: .85rem 1rem; overflow-x: auto; margin: 1rem 0 0;
+    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: .78rem; line-height: 1.65;
+    color: var(--ink);
+  }
+  pre .c { color: var(--muted); }
+  pre .out { color: var(--critical); font-weight: 500; }
+  pre .ok { color: var(--medium); }
+  code {
+    font-family: "JetBrains Mono", ui-monospace, monospace; font-size: .86em;
+    background: var(--sunken); padding: .1em .35em; border-radius: 2px;
+  }
+  pre code { background: none; padding: 0; font-size: 1em; }
+
+  .root-cause {
+    margin-top: 1rem; padding: .7rem .95rem; background: var(--surface);
+    border: 1px solid var(--rule); border-radius: 2px; font-size: .85rem; color: var(--ink-soft);
+  }
+  .root-cause b {
+    font-family: "JetBrains Mono", monospace; font-size: .64rem; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--muted); display: block; margin-bottom: .2rem; font-weight: 500;
+  }
+
+  ul.tight { max-width: 46rem; padding-left: 1.1rem; }
+  ul.tight li { margin: .35rem 0; }
+
+  footer {
+    margin-top: 4rem; padding-top: 1.5rem; border-top: 1px solid var(--rule-strong);
+    font-size: .82rem; color: var(--muted); max-width: 46rem;
+  }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="eyebrow">
+      <span>Security audit</span><span>v1.8.0 · commit 618a6bf</span><span>31 August 2026</span>
+    </div>
+    <h1><span class="lib">sanitize-against</span> — audit findings</h1>
+    <p class="standfirst">Thirty-two findings, every one reproduced against the published npm build. Seven are security-relevant; three of those are reachable from an ordinary <code>JSON.parse</code> of a request body and fail <em>open</em>.</p>
+    <div class="tally">
+      <div class="tally-item"><span class="tally-n" style="color:var(--critical)">3</span><span class="tally-l">Critical</span></div>
+      <div class="tally-item"><span class="tally-n" style="color:var(--high)">5</span><span class="tally-l">High</span></div>
+      <div class="tally-item"><span class="tally-n" style="color:var(--medium)">10</span><span class="tally-l">Medium</span></div>
+      <div class="tally-item"><span class="tally-n" style="color:var(--low)">8</span><span class="tally-l">Low</span></div>
+      <div class="tally-item"><span class="tally-n" style="color:var(--note)">6</span><span class="tally-l">Near miss</span></div>
+      <div class="tally-item"><span class="tally-n">88</span><span class="tally-l">tests on branch</span></div>
+    </div>
+    <div class="callout" style="margin-bottom:0">
+      <p><strong>Coverage exists.</strong> Branch <code>test/audit-findings</code> carries one test per finding — 88 in <code>test/src/audit.ts</code>, plus five compile-time gaps and the SA-32 fixture. Known-broken expectations are wrapped so CI stays green today and fails the moment a bug is fixed, which is the signal to promote the test. <code>AUDIT_STRICT=1 npx jest audit</code> shows the real red list: 74 failing, 14 passing. Nine gaps encode a policy choice rather than an unambiguous bug and are marked as such.</p>
+    </div>
+  </header>
+
+  <div class="callout">
+    <p><strong>The headline.</strong> One line of code — <code>knownInputObjects.set(input, out)</code> running <em>before</em> <code>out</code> is populated — accounts for seven separate symptoms, including silent loss of required fields, privilege escalation through defaults, and unwanted properties surviving the filter. It is reachable through the most ordinary use of <code>OR</code> there is: a discriminated union.</p>
+    <p><strong>The second theme.</strong> Validation failure is signalled by throwing, and <code>OR</code>/<code>NOT</code>/<code>matches</code>/<code>soft</code> catch <em>everything</em>. An attacker who can make a pattern crash — deeply nested JSON is enough — chooses which branch validates them. With <code>OR(strictPattern, any)</code> that is a complete sanitization bypass.</p>
+    <p><strong>What holds.</strong> The core <code>__proto__</code> defence works exactly as designed for fully-specified object patterns. Every pollution finding below comes from a hole <em>around</em> it — pass-through leaves, key transforms, patterns loaded from JSON — not from the guard itself. I could not write a single global <code>Object.prototype</code> during sanitization; that always required a downstream merge.</p>
+  </div>
+
+  <h2>All findings</h2>
+  <p class="sec-note">Reachability is what an attacker needs beyond a normal request body. <em>Plain JSON</em> means nothing more than posting JSON to an endpoint.</p>
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th>ID</th><th>Severity</th><th>Finding</th><th>Reachability</th></tr></thead>
+      <tbody>
+        <tr><td class="id"><a href="#sa-01">SA-01</a></td><td><span class="sev sev-critical">Critical</span></td><td>Aborted-branch residue is served as a valid result</td><td class="reach">Plain JSON</td></tr>
+        <tr><td class="id"><a href="#sa-02">SA-02</a></td><td><span class="sev sev-critical">Critical</span></td><td>Attacker steers <code>OR</code>/<code>NOT</code> by crashing a pattern</td><td class="reach">Plain JSON</td></tr>
+        <tr><td class="id"><a href="#sa-03">SA-03</a></td><td><span class="sev sev-critical">Critical</span></td><td>Pass-through leaves preserve own <code>__proto__</code></td><td class="reach">Plain JSON</td></tr>
+        <tr><td class="id"><a href="#sa-04">SA-04</a></td><td><span class="sev sev-high">High</span></td><td><code>OBJECT</code> key transform defeats the poisoning guard</td><td class="reach">Plain JSON + key pattern</td></tr>
+        <tr><td class="id"><a href="#sa-05">SA-05</a></td><td><span class="sev sev-high">High</span></td><td>Result cache is keyed on input identity, never on pattern</td><td class="reach">Shared refs</td></tr>
+        <tr><td class="id"><a href="#sa-06">SA-06</a></td><td><span class="sev sev-medium">Medium</span></td><td>Pattern loaded from JSON emits a pollution gadget</td><td class="reach">Schema from JSON</td></tr>
+        <tr><td class="id"><a href="#sa-07">SA-07</a></td><td><span class="sev sev-medium">Medium</span></td><td>Existing prototype pollution is copied into every output</td><td class="reach">Prior pollution</td></tr>
+        <tr><td class="id"><a href="#sa-08">SA-08</a></td><td><span class="sev sev-high">High</span></td><td><code>CONST</code> throws a string, so error decoration crashes</td><td class="reach">Plain JSON</td></tr>
+        <tr><td class="id"><a href="#sa-09">SA-09</a></td><td><span class="sev sev-medium">Medium</span></td><td>Unsupported pattern values fail with a cryptic <code>TypeError</code></td><td class="reach">Developer error</td></tr>
+        <tr><td class="id"><a href="#sa-10">SA-10</a></td><td><span class="sev sev-medium">Medium</span></td><td><code>OBJECT</code> silently deletes <code>Object.prototype</code>-named keys</td><td class="reach">Plain JSON</td></tr>
+        <tr><td class="id"><a href="#sa-11">SA-11</a></td><td><span class="sev sev-high">High</span></td><td><code>function</code> validators become <code>instanceof</code> checks</td><td class="reach">Developer error</td></tr>
+        <tr><td class="id"><a href="#sa-12">SA-12</a></td><td><span class="sev sev-medium">Medium</span></td><td><code>regex()</code> does not enforce a string type</td><td class="reach">Plain JSON</td></tr>
+        <tr><td class="id"><a href="#sa-13">SA-13</a></td><td><span class="sev sev-medium">Medium</span></td><td><code>each()</code> skips array holes entirely</td><td class="reach">Non-JSON source</td></tr>
+        <tr><td class="id"><a href="#sa-14">SA-14</a></td><td><span class="sev sev-medium">Medium</span></td><td><code>addPattern</code> mutates already-compiled validators</td><td class="reach">Developer usage</td></tr>
+        <tr><td class="id"><a href="#sa-15">SA-15</a></td><td><span class="sev sev-low">Low</span></td><td>Recursive patterns blow the stack at compile time</td><td class="reach">Developer usage</td></tr>
+        <tr><td class="id"><a href="#sa-16">SA-16</a></td><td><span class="sev sev-medium">Medium</span></td><td><code>numberLike*</code> accepts hex, octal, Infinity, padding</td><td class="reach">Plain JSON</td></tr>
+        <tr><td class="id"><a href="#sa-17">SA-17</a></td><td><span class="sev sev-low">Low</span></td><td><code>regex()</code> mutates the caller's <code>RegExp</code></td><td class="reach">Plain JSON</td></tr>
+        <tr><td class="id"><a href="#sa-18">SA-18</a></td><td><span class="sev sev-low">Low</span></td><td>Helpers raise <code>TypeError</code> instead of a validation error</td><td class="reach">Plain JSON</td></tr>
+        <tr><td class="id"><a href="#sa-19">SA-19</a></td><td><span class="sev sev-low">Low</span></td><td>Cross-realm values and thenables are rejected</td><td class="reach">vm / iframe / worker</td></tr>
+        <tr><td class="id"><a href="#sa-20">SA-20</a></td><td><span class="sev sev-medium">Medium</span></td><td>Shared input references produce aliased output objects</td><td class="reach">Shared refs</td></tr>
+        <tr><td class="id"><a href="#sa-21">SA-21</a></td><td><span class="sev sev-low">Low</span></td><td><code>AND</code> is a pipeline, documented as an intersection</td><td class="reach">Documentation</td></tr>
+        <tr><td class="id"><a href="#sa-22">SA-22</a></td><td><span class="sev sev-low">Low</span></td><td><code>{a, "a?"}</code> silently means "required <em>and</em> optional"</td><td class="reach">Developer error</td></tr>
+        <tr><td class="id"><a href="#sa-23">SA-23</a></td><td><span class="sev sev-medium">Medium</span></td><td>Typed output is unusable, so consumers reach for <code>as any</code></td><td class="reach">Every TS consumer</td></tr>
+        <tr><td class="id"><a href="#sa-24">SA-24</a></td><td><span class="sev sev-low">Low</span></td><td>No README combinator example runs as written</td><td class="reach">Documentation</td></tr>
+        <tr><td class="id"><a href="#sa-25">SA-25</a></td><td><span class="sev sev-low">Low</span></td><td>A stray local file shipped in the npm tarball</td><td class="reach">Packaging</td></tr>
+        <tr><td class="id"><a href="#sa-26">SA-26</a></td><td><span class="sev sev-note">Near miss</span></td><td>Async cache state is nulled rather than restored</td><td class="reach">—</td></tr>
+        <tr><td class="id"><a href="#sa-27">SA-27</a></td><td><span class="sev sev-note">Near miss</span></td><td>The poisoning guard depends on the bug it guards against</td><td class="reach">—</td></tr>
+        <tr><td class="id"><a href="#sa-28">SA-28</a></td><td><span class="sev sev-note">Near miss</span></td><td>Every property is read twice</td><td class="reach">—</td></tr>
+        <tr><td class="id"><a href="#sa-29">SA-29</a></td><td><span class="sev sev-note">Near miss</span></td><td><code>catch {}</code> swallows programming errors, not just failures</td><td class="reach">—</td></tr>
+        <tr><td class="id"><a href="#sa-30">SA-30</a></td><td><span class="sev sev-note">Near miss</span></td><td>Attacker code runs while formatting error messages</td><td class="reach">—</td></tr>
+        <tr><td class="id"><a href="#sa-31">SA-31</a></td><td><span class="sev sev-note">Near miss</span></td><td>The output prototype is repaired last, not set first</td><td class="reach">—</td></tr>
+        <tr><td class="id"><a href="#sa-32">SA-32</a></td><td><span class="sev sev-high">High</span></td><td>Five <code>sanitize()</code> calls in one file crash <code>tsc</code></td><td class="reach">Every TS consumer</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Critical</h2>
+  <p class="sec-note">All three are reachable by posting JSON to an endpoint, and all three fail open — they let something through rather than rejecting it.</p>
+
+  <article class="finding" id="sa-01">
+    <div class="f-head"><span class="f-id">SA-01</span><span class="sev sev-critical">Critical</span>
+      <h3 class="f-title">An aborted branch's half-built object is served as a valid result</h3></div>
+    <div class="f-body">
+      <p>The object-pattern matcher registers its output in the cycle cache <em>before</em> filling it. When a pattern aborts midway — which is exactly what every non-matching <code>OR</code> branch does — the abandoned, partially-populated object stays in the cache. The next branch asks the cache for the same input, gets a cache hit, and returns the wreckage of the previous attempt without validating anything.</p>
+      <p>A discriminated union is the canonical use of <code>OR</code>, and it is broken:</p>
+<pre><code>sanitize(new OR(
+  { kind: new CONST("comment"), body: String },
+  { kind: new CONST("like") }
+))(JSON.parse('{"kind":"like"}'))
+
+<span class="c">// expected  { kind: "like" }</span>
+<span class="out">// actual    {}                 ← required field vanished, no error</span></code></pre>
+      <p>The same mechanism promotes a failed branch's defaults over the correct branch's:</p>
+<pre><code>sanitize(new OR(
+  { isAdmin: true,  mustFail: Number },   <span class="c">// aborts on mustFail…</span>
+  { isAdmin: false }                      <span class="c">// …but its isAdmin=true survives</span>
+))(JSON.parse('{}'))
+
+<span class="out">// { isAdmin: true }   ← privilege escalation from an empty request body</span></code></pre>
+      <p>And it lets properties through that the matching pattern never mentioned, breaking the README's promise that extra properties are ignored:</p>
+<pre><code>sanitize(new OR({ a: String, b: String, c: String }, { a: String }))(JSON.parse('{"a":"x","b":"y"}'))
+<span class="out">// { a: "x", b: "y" }   ← b is not in the pattern that matched</span></code></pre>
+      <p>It is not confined to <code>OR</code>. Any composition where one pattern touches the input and fails before another pattern sees it hits the same cache:</p>
+<pre><code><span class="c">// "reject this shape, then enforce that shape" — an idiomatic composition</span>
+sanitize(new AND(new NOT({ a: Number }), { b: String }))(JSON.parse('{"b":"hi"}'))
+<span class="out">// {}                      ← every required field gone</span>
+sanitize({ b: String })(JSON.parse('{"b":"hi"}'))
+<span class="ok">// { b: "hi" }             ← control</span>
+
+<span class="c">// deep OBJECT builds `new OR(valuePattern, this)` internally, so it inherits the bug</span>
+sanitize(new OBJECT({ id: Number }, false, true))(JSON.parse('{"a":{"x":"str"}}'))
+<span class="out">// { a: {} }               ← should have thrown; invalid data accepted as empty</span>
+
+sanitize(new OR(new AWAITED({ x: String }), new AWAITED({ y: Number })))(Promise.resolve({ y: 1 }))
+<span class="out">// {}                      ← same bug across the await boundary</span></code></pre>
+      <p>Objects produced this way also carry a <strong>null prototype</strong>, because the closing <code>Object.setPrototypeOf(out, Object.prototype)</code> is on the path that never ran. <code>JSON.stringify</code> still works on them, so this usually surfaces far from the sanitizer as <code>r.toString is not a function</code> or a failed <code>hasOwnProperty</code> call.</p>
+      <div class="root-cause"><b>Root cause</b><code>sanitizeRec</code>, object branch: <code>knownInputObjects.set(input, out)</code> executes immediately after <code>const out = Object.create(null)</code>, before either key loop. <code>OBJECT.matches</code> has the identical ordering.</div>
+      <dl class="meta">
+        <div><dt>Reach</dt><dd>Plain JSON body — no shared references, getters or exotic parsers</dd></div>
+        <div><dt>Fails</dt><dd>Open — required fields disappear, unvalidated values pass</dd></div>
+        <div><dt>Needs</dt><dd>Two or more branches that are, or contain, object patterns</dd></div>
+      </dl>
+    </div>
+  </article>
+
+  <article class="finding" id="sa-02">
+    <div class="f-head"><span class="f-id">SA-02</span><span class="sev sev-critical">Critical</span>
+      <h3 class="f-title">The attacker picks which branch validates them, by crashing the others</h3></div>
+    <div class="f-body">
+      <p>Failure is signalled by throwing, and the combinators catch every throwable — a <code>RangeError</code> from stack exhaustion is indistinguishable from "this pattern did not match". Since input nesting depth is attacker-controlled and recursive patterns recurse once per level, the attacker decides which patterns are allowed to run.</p>
+      <p><code>NOT</code> becomes fail-open: an input the pattern genuinely matches is accepted, because the match crashed instead of completing.</p>
+<pre><code>const deep = n =&gt; '{"a":'.repeat(n) + '"L"' + '}'.repeat(n)
+const pat  = () =&gt; new OBJECT(String, false, true)
+
+sanitize(new NOT(pat()))(JSON.parse(deep(500)))
+<span class="ok">// throws "Matched even though it is negated."   ← correct</span>
+sanitize(new NOT(pat()))(JSON.parse(deep(4000)))
+<span class="out">// returns the input                             ← accepted; the pattern still matches it</span></code></pre>
+      <p>With <code>OR</code> it is a complete bypass. Add nesting until the strict branch runs out of stack, and the permissive branch takes over:</p>
+<pre><code>sanitize(new OR(new OBJECT(String, false, true), any))(JSON.parse(deep(4000)))
+<span class="out">// returns the raw, unfiltered input object (=== input)</span></code></pre>
+      <p>The threshold sits between depth 500 and 1500 on a default Node 22 stack, while <code>JSON.parse</code> itself handles 200,000 levels — so the window is wide and trivially probed. The <code>RangeError</code> is also laundered into <code>Error: All patterns failed</code> by deep <code>OBJECT</code>'s internal <code>OR</code>, so nothing in the logs indicates a crash occurred.</p>
+      <p>A throwing getter is the same attack without the nesting, wherever input does not come from <code>JSON.parse</code>:</p>
+<pre><code>const input = { get role() { throw new Error("x") } }
+sanitize(new NOT({ role: String }))(input) === input   <span class="out">// true — accepted</span></code></pre>
+      <div class="root-cause"><b>Root cause</b><code>OR.matches</code>, <code>NOT.matches</code>, <code>matches()</code> and <code>OBJECT</code>'s soft mode all use bare <code>catch</code>. Nothing distinguishes a validation failure from a resource or programming error.</div>
+      <dl class="meta">
+        <div><dt>Reach</dt><dd>Plain JSON body, given any recursive pattern (<code>OBJECT</code> deep mode) in the union</dd></div>
+        <div><dt>Fails</dt><dd>Open — unvalidated input returned by reference</dd></div>
+      </dl>
+    </div>
+  </article>
+
+  <article class="finding" id="sa-03">
+    <div class="f-head"><span class="f-id">SA-03</span><span class="sev sev-critical">Critical</span>
+      <h3 class="f-title">Pass-through leaves hand the caller a live prototype-pollution payload</h3></div>
+    <div class="f-body">
+      <p>The guard against <code>__proto__</code> works by rebuilding the output from pattern keys. Any leaf that returns its input <em>by reference</em> skips that rebuild, so the attacker's own <code>__proto__</code> key — which <code>JSON.parse</code> creates as a real own property — travels intact through the sanitizer and into whatever the application does next.</p>
+<pre><code>const clean = sanitize({ data: any })(JSON.parse('{"data":{"__proto__":{"isAdmin":true}}}'))
+Object.keys(clean.data)          <span class="out">// [ "__proto__" ]   ← survived sanitization</span>
+
+naiveRecursiveMerge({}, clean.data)
+;({}).isAdmin                    <span class="out">// true              ← Object.prototype polluted globally</span></code></pre>
+      <p>Confirmed for <code>any</code>, <code>Object</code>, <code>unknown</code>, <code>NOT(…)</code>, <code>someEnsure</code>, <code>each(any)</code>, <code>OR(String, any)</code>, and every value under <code>OBJECT(any)</code>. One correction from writing the tests: <code>OBJECT</code> rebuilds its own key set, so the <em>top level</em> of its output is clean — it is the values underneath, which go through <code>any</code> untouched, that keep their own <code>__proto__</code>. The control behaves correctly — a fully specified nested pattern strips it:</p>
+<pre><code>sanitize({ data: { x: Number } })(JSON.parse('{"data":{"x":1,"__proto__":{"p":1}}}'))
+<span class="ok">// { data: { x: 1 } }   ← clean</span></code></pre>
+      <p>This is what makes the library's headline claim conditional in a way nothing documents: it holds only when every leaf is a concrete pattern. <code>Object</code> is the sharpest edge, because it reads as "this must be an object" but is a pure passthrough that also accepts arrays and functions.</p>
+<pre><code>const inp = JSON.parse('{"settings":[1,2]}')
+sanitize({ settings: Object })(inp).settings === inp.settings   <span class="out">// true</span>
+typeof sanitize(Object)(function hack() {})                     <span class="out">// "function"</span></code></pre>
+      <dl class="meta">
+        <div><dt>Reach</dt><dd>Plain JSON body, wherever a permissive leaf is used</dd></div>
+        <div><dt>Impact</dt><dd>Global <code>Object.prototype</code> pollution once the value meets any merge/extend helper</dd></div>
+      </dl>
+    </div>
+  </article>
+
+  <h2>High and medium</h2>
+  <p class="sec-note">Security-relevant issues that need a particular pattern shape or a specific developer choice, plus the bugs with the widest blast radius.</p>
+
+  <article class="finding" id="sa-04">
+    <div class="f-head"><span class="f-id">SA-04</span><span class="sev sev-high">High</span>
+      <h3 class="f-title">A key-transforming key pattern walks straight past the poisoning guard</h3></div>
+    <div class="f-body">
+      <p><code>OBJECT.matches</code> checks <code>out[key]</code> using the <em>raw</em> key but writes to <code>out[this.saniKey(key)]</code> using the <em>transformed</em> one. Any key pattern that changes the string — lowercasing, trimming, stripping a prefix — moves the write out from under its own guard.</p>
+<pre><code>const against = sanitize(new OBJECT(any, k =&gt; k.toLowerCase()))
+
+const out = against(JSON.parse('{"__PROTO__":{"role":"admin"},"role":"user"}'))
+Object.hasOwn(out, "role")   <span class="out">// false   ← the client's actual value was dropped</span>
+out.role                     <span class="out">// "admin" ← read from the prototype the attacker installed</span></code></pre>
+      <p>So the attacker does not merely add a property; they <em>replace</em> one, and the substituted value is invisible to <code>Object.keys</code>, <code>hasOwn</code> and <code>JSON.stringify</code> while being perfectly visible to <code>out.role</code>. Sending <code>{"__PROTO__": null}</code> forces a null-prototype output instead. A prefix-stripping key pattern gives the same result with a lowercase payload:</p>
+<pre><code>sanitize(new OBJECT(any, new AND(String, k =&gt; k.slice(5))))(
+  JSON.parse('{"user___proto__":{"isAdmin":true},"user_name":"bob"}')
+).isAdmin                    <span class="out">// true</span></code></pre>
+      <p>An identity key pattern (the default) is safe: <code>out["__proto__"]</code> resolves to <code>Object.prototype</code>, so the guard fires. This stays local to the output object — I could not reach the global <code>Object.prototype</code> through it.</p>
+      <dl class="meta">
+        <div><dt>Reach</dt><dd>Plain JSON body, wherever a normalising key pattern is used</dd></div>
+        <div><dt>Note</dt><dd><code>OBJECT</code> is not documented in the README at all</dd></div>
+      </dl>
+    </div>
+  </article>
+
+  <article class="finding" id="sa-05">
+    <div class="f-head"><span class="f-id">SA-05</span><span class="sev sev-high">High</span>
+      <h3 class="f-title">The result cache is keyed on the input object alone, never on the pattern</h3></div>
+    <div class="f-body">
+      <p>Two different patterns applied to the same input object within one call share a result: the second pattern never runs. Where SA-01 is about a <em>failed</em> branch, this is the same cache misfiring on success.</p>
+<pre><code>const shared = { role: "admin", extra: "leak" }
+sanitize({ a: new OBJECT(any), b: { role: new CONST("guest") } })({ a: shared, b: shared })
+<span class="out">// { a: {role:"admin", extra:"leak"}, b: {role:"admin", extra:"leak"} }</span>
+<span class="c">//                                     ↑ CONST("guest") never ran, "extra" never stripped</span>
+
+<span class="c">// same across await, with one promise used twice</span>
+const P = Promise.resolve({ x: "s" })
+await sanitize({ one: new AWAITED({x:String}), two: new AWAITED({x:String, extra:Number}) })({one:P, two:P}).two
+<span class="out">// { x: "s" }   ← `extra` is required and simply absent</span></code></pre>
+      <p><code>JSON.parse</code> never produces shared references, so this needs a format that does: YAML anchors, msgpack or BSON with references, <code>circ-json</code>, structured clone, ORM models, or ordinary internal code passing one object into two fields.</p>
+      <div class="root-cause"><b>Root cause</b>The cache exists for cycle handling, but a cycle is <em>the same pattern</em> revisiting an object. Keying on input identity alone conflates that with a different pattern seeing it.</div>
+    </div>
+  </article>
+
+  <article class="finding" id="sa-06">
+    <div class="f-head"><span class="f-id">SA-06</span><span class="sev sev-medium">Medium</span>
+      <h3 class="f-title">A pattern loaded from JSON emits an output that is itself a pollution gadget</h3></div>
+    <div class="f-body">
+      <p>Pattern keys are trusted implicitly. Because <code>out</code> has a null prototype while it is being filled, a pattern key named <code>__proto__</code> creates a real own property that survives the closing <code>setPrototypeOf</code> — turning the sanitizer's output into a payload.</p>
+<pre><code>const out = sanitize(JSON.parse('{"__proto__":{"isAdmin":false}}'))(
+                     JSON.parse('{"__proto__":{"isAdmin":true}}'))
+Object.hasOwn(out, "__proto__")   <span class="out">// true — enumerable, writable own property</span>
+naiveRecursiveMerge({}, out); ({}).isAdmin   <span class="out">// true</span></code></pre>
+      <p>Object <em>literals</em> cannot express this (<code>{"__proto__": x}</code> sets the prototype instead), so it takes a schema built from <code>JSON.parse</code>, <code>Object.create(null)</code>, or dynamic keys — which is precisely how schema-registry and multi-tenant setups build patterns.</p>
+    </div>
+  </article>
+
+  <article class="finding" id="sa-07">
+    <div class="f-head"><span class="f-id">SA-07</span><span class="sev sev-medium">Medium</span>
+      <h3 class="f-title">Existing prototype pollution is copied into every sanitized output</h3></div>
+    <div class="f-body">
+      <p><code>for (const key in pattern)</code> walks inherited keys, so a polluted <code>Object.prototype</code> silently adds phantom keys to every pattern compiled afterwards. A library whose purpose is defending against prototype poisoning amplifies it instead.</p>
+<pre><code>Object.prototype.LEAK = "evil"
+sanitize({ a: String })(JSON.parse('{"a":"x"}'))
+<span class="out">// { a: "x", LEAK: "evil" }   ← injected into every response</span>
+
+Object.prototype.INJ = Number
+sanitize({ a: String })(JSON.parse('{"a":"x"}'))
+<span class="out">// throws: Regarding "INJ": Input is not a number   ← every request now fails</span></code></pre>
+      <p>Two limits worth recording: it is <strong>compile-time only</strong> (the key maps are snapshotted by <code>sanitize()</code>, so a validator built before the pollution is unaffected), and the <em>input</em>'s prototype does not leak values — the <code>Object.hasOwn</code> guard on the read path holds correctly.</p>
+      <div class="root-cause"><b>Root cause</b><code>for…in</code> over the pattern object. <code>Object.keys</code> would be equivalent for every legitimate pattern.</div>
+    </div>
+  </article>
+
+  <article class="finding" id="sa-08">
+    <div class="f-head"><span class="f-id">SA-08</span><span class="sev sev-high">High</span>
+      <h3 class="f-title"><code>CONST</code> throws a string, so every error-decorating caller crashes</h3></div>
+    <div class="f-body">
+      <p><code>CONST.matches</code> throws a template literal rather than an <code>Error</code>. Every caller that prefixes context does <code>e.message = …</code>, which in strict mode (both shipped builds) is a <code>TypeError</code> on a primitive. <code>CONST</code> is therefore unusable everywhere except bare, or inside a combinator that swallows the crash.</p>
+<pre><code>sanitize({ kind: new CONST("a") })(JSON.parse('{"kind":"b"}'))
+<span class="out">// TypeError: Cannot create property 'message' on string 'Expected a, got b'</span>
+sanitize(new CONST("a"), "my message")("b")   <span class="out">// same TypeError</span>
+sanitize(each(new CONST("a")))(["b"])         <span class="out">// same TypeError</span>
+sanitize(new CONST("a"))("b")                 <span class="c">// throws the bare string</span></code></pre>
+      <p>It fails closed, but the request becomes a 500 with the diagnostic destroyed rather than a 400 explaining the problem. It also silently degrades SA-01: inside an <code>OR</code>, the <code>TypeError</code> is caught like any other failure.</p>
+    </div>
+  </article>
+
+  <article class="finding" id="sa-09">
+    <div class="f-head"><span class="f-id">SA-09</span><span class="sev sev-medium">Medium</span>
+      <h3 class="f-title">An unsupported pattern value fails with an unrelated <code>TypeError</code></h3></div>
+    <div class="f-body">
+      <p><code>sanitizeRec</code> has no fallback branch, so <code>against</code> stays <code>undefined</code> and the next line dereferences it. A typo, a missing import, or a stray trailing value produces an error naming an internal symbol.</p>
+<pre><code>sanitize({ name: String, age: undefined })
+<span class="out">// TypeError: Cannot read properties of undefined (reading 'Symbol(fromInstance)')</span></code></pre>
+      <p>Same for <code>null</code>, <code>bigint</code> and <code>symbol</code> patterns. This is the class of bug you flagged: it should be an explicit <code>throw new Error("Unsupported pattern: …")</code> naming the offending key.</p>
+    </div>
+  </article>
+
+  <article class="finding" id="sa-10">
+    <div class="f-head"><span class="f-id">SA-10</span><span class="sev sev-medium">Medium</span>
+      <h3 class="f-title"><code>OBJECT</code> silently deletes any key that shares a name with <code>Object.prototype</code></h3></div>
+    <div class="f-body">
+      <p>The poisoning guard is <code>if (out[key] !== undefined) continue</code>, and <code>out</code> is a plain object — so the check consults its prototype chain and skips a dozen perfectly ordinary key names. No error, in soft mode or otherwise.</p>
+<pre><code>sanitize(new OBJECT(any))(JSON.parse(
+  '{"constructor":"c","toString":"t","valueOf":"v","hasOwnProperty":"h","normal":"n"}'))
+<span class="out">// { normal: "n" }   ← four keys silently gone</span></code></pre>
+      <p><code>OBJECT</code> is precisely the matcher for user-supplied dictionaries — i18n keys, tag maps, form field names — so this is live data loss. A transforming key pattern also collapses colliding keys, last write winning, equally silently.</p>
+    </div>
+  </article>
+
+  <article class="finding" id="sa-11">
+    <div class="f-head"><span class="f-id">SA-11</span><span class="sev sev-high">High</span>
+      <h3 class="f-title">A <code>function</code> validator is silently reinterpreted as an <code>instanceof</code> check</h3></div>
+    <div class="f-body">
+      <p><code>isConstructor(f)</code> is <code>f.prototype !== undefined</code>, which is true for every <code>function</code> declaration and false for arrows, async functions, bound functions and shorthand methods. The README only ever shows arrows, so the trap is invisible until someone converts one.</p>
+<pre><code>function fnValidator(x) { if (typeof x !== "string") throw new Error("nope"); return x }
+
+sanitize(fnValidator)("hi")
+<span class="out">// Error: Input is not an instance of fnValidator   ← never calls the function</span>
+
+sanitize(new NOT(fnValidator))("hi")   <span class="out">// "hi"  ← FAIL-OPEN</span>
+sanitize(new NOT(fnValidator))(42)     <span class="out">// 42    ← accepts literally everything</span>
+sanitize(new NOT(x =&gt; { … }))("hi")    <span class="ok">// throws, correctly (arrow control)</span></code></pre>
+      <p>Standalone it fails closed and loudly. Under <code>NOT</code> it inverts into a validator that can never reject anything — and changing <code>const f = x =&gt; …</code> to <code>function f(x) { … }</code> is the kind of edit nobody reviews.</p>
+    </div>
+  </article>
+
+  <article class="finding" id="sa-12">
+    <div class="f-head"><span class="f-id">SA-12</span><span class="sev sev-medium">Medium</span>
+      <h3 class="f-title"><code>regex()</code> never checks that the input is a string</h3></div>
+    <div class="f-body">
+      <p><code>RegExp.prototype.test</code> coerces its argument, so non-strings match and are returned unchanged, while the TypeScript signature claims <code>(input: string) =&gt; string</code>.</p>
+<pre><code>sanitize(regex(/^\d+$/))(123)                          <span class="out">// 123   (a number)</span>
+sanitize(regex(/^\d+$/))(["123"])                      <span class="out">// ["123"] (an array)</span>
+sanitize({ t: regex(/^tr/) })(JSON.parse('{"t":true}')) <span class="out">// { t: true }</span></code></pre>
+      <p>The array case is the dangerous one: <code>?id[]=123</code> through any standard query parser yields <code>["123"]</code>, which passes a digits-only regex and arrives downstream as an array — the classic route into NoSQL operator injection. Composing as <code>new AND(String, regex(…))</code> fixes it, but nothing signals that you must.</p>
+    </div>
+  </article>
+
+  <article class="finding" id="sa-13">
+    <div class="f-head"><span class="f-id">SA-13</span><span class="sev sev-medium">Medium</span>
+      <h3 class="f-title"><code>each()</code> skips array holes entirely</h3></div>
+    <div class="f-body">
+      <p><code>Array.prototype.map</code> does not visit holes, so they are never validated and pass through into the output.</p>
+<pre><code>sanitize(each(String))(["a", , "c"])                   <span class="out">// [ 'a', &lt;1 empty&gt;, 'c' ]</span>
+sanitize(each(new CONST("only-this")))(new Array(5))   <span class="out">// [ &lt;5 empty&gt; ]  — passes</span>
+sanitize(each(0))([undefined, 5])                      <span class="ok">// [0, 5]  — control, defaults applied</span></code></pre>
+      <p>Not reachable from <code>JSON.parse</code> (JSON has no holes), so this needs a hand-built array, a CSV/msgpack importer, or a query parser with sparse-array support. Worth noting that a downstream reader sees <code>undefined</code> where the type says <code>string</code>.</p>
+    </div>
+  </article>
+
+  <article class="finding" id="sa-14">
+    <div class="f-head"><span class="f-id">SA-14</span><span class="sev sev-medium">Medium</span>
+      <h3 class="f-title"><code>addPattern</code> changes validators that were compiled long before</h3></div>
+    <div class="f-body">
+      <p><code>OBJECT.init</code> memoises itself; <code>Combinator.init</code> does not. So a combinator instance is re-initialised by every <code>sanitize()</code> that references it, and because <code>matches</code> reads <code>this.sanis</code> at call time, that re-initialisation retroactively rewrites already-built validators.</p>
+<pre><code>const o = new OR(String)
+const against = sanitize(o)
+
+against(5)          <span class="ok">// throws — correct</span>
+o.addPattern(Number)
+against(5)          <span class="ok">// still throws — the mutation appears to be ignored…</span>
+
+sanitize(o)         <span class="c">// …until some unrelated module compiles its own validator</span>
+against(5)          <span class="out">// 5   ← the original validator's behaviour just changed</span></code></pre>
+      <p>Both halves are surprising: the mutation looks like a no-op, then lands later at a distance. The natural recursive-schema idiom is also silently non-recursive, because <code>each()</code> calls <code>sanitize()</code> eagerly:</p>
+<pre><code>node.addPattern({ children: each(node) })   <span class="c">// compiles, never actually recurses</span>
+node.addPattern(node)                       <span class="out">// RangeError at sanitize() time</span></code></pre>
+    </div>
+  </article>
+
+  <article class="finding" id="sa-16">
+    <div class="f-head"><span class="f-id">SA-16</span><span class="sev sev-medium">Medium</span>
+      <h3 class="f-title"><code>numberLike*</code> inherits every quirk of unary <code>+</code></h3></div>
+    <div class="f-body">
+      <p>The check is <code>!isNaN(+input)</code>, which is far broader than "looks like a number":</p>
+<pre><code>sanitize(numberLikePattern)("0x1f")      <span class="out">// 31</span>
+sanitize(numberLikePattern)("0b101")     <span class="out">// 5</span>
+sanitize(numberLikePattern)("0o17")      <span class="out">// 15</span>
+sanitize(numberLikePattern)("Infinity")  <span class="out">// Infinity</span>
+sanitize(numberLikePattern)("1e400")     <span class="out">// Infinity</span>
+sanitize(numberLikePattern)("   ")       <span class="out">// 0          ← whitespace-only</span>
+sanitize(numberLikePattern)("  12  ")    <span class="out">// 12</span></code></pre>
+      <p><code>numberLikeStringPattern</code> compounds it by design — it preserves the raw text, so a "validated numberlike string" can be <code>"  12  "</code>, <code>"0x1f"</code>, <code>"+1"</code> or <code>"Infinity"</code>. If those become cache keys, IDs, or filenames, two different strings denote the same number and vice versa.</p>
+    </div>
+  </article>
+
+  <article class="finding" id="sa-20">
+    <div class="f-head"><span class="f-id">SA-20</span><span class="sev sev-medium">Medium</span>
+      <h3 class="f-title">Shared input references become shared, mutable output objects</h3></div>
+    <div class="f-body">
+      <p>A consequence of the same cache as SA-05: two fields that referenced one input object come back referencing one <em>output</em> object, so writing through one is visible through the other.</p>
+<pre><code>const shared = { x: "1" }
+const out = sanitize({ a: { x: String }, b: { x: String } })({ a: shared, b: shared })
+out.a.x = "MUTATED"
+out.b.x           <span class="out">// "MUTATED"     out.a === out.b</span></code></pre>
+      <p>Sanitized output reads as a fresh, owned copy; here it is a graph with aliasing that mirrors the attacker's input structure.</p>
+    </div>
+  </article>
+
+  <article class="finding" id="sa-23">
+    <div class="f-head"><span class="f-id">SA-23</span><span class="sev sev-medium">Medium</span>
+      <h3 class="f-title">The typed output is unusable, so consumers reach for <code>as any</code></h3></div>
+    <div class="f-body">
+      <p>An object pattern's output type has no accessible properties:</p>
+<pre><code>const r = sanitize({ name: String, age: Number })(body)
+const x: string = r.name
+<span class="out">// TS2339: Property 'name' does not exist on type</span>
+<span class="out">//         'SanitizeNestedOb&lt;{ name: StringConstructor; age: NumberConstructor; }, true&gt;'</span></code></pre>
+      <p>Five cases reproduce: a flat object pattern, a nested one, the README's headline example, a union's discriminant (so the idiomatic <code>switch (result.kind)</code> after sanitizing is unavailable — the one place the types would earn their keep), and an <code>AND</code> pipeline ending in an object pattern. The only ergonomic response is <code>as any</code> on the result, which discards the type-level guarantee at exactly the boundary where it is supposed to hold.</p>
+      <p><strong>Corrected since the first pass.</strong> <code>strictNullChecks</code> is the switch, not <code>strict</code> as a whole. It is on in every <code>strict: true</code> project — the default for new consumers — and then property access is a hard <code>TS2339</code>. With it <em>off</em>, the conditional types collapse to <code>any</code> instead, so the output has no type safety at all: quieter, not better. Either way the guarantee is not delivered.</p>
+      <p>Also corrected: the other suspected type failures do <em>not</em> reproduce, and are recorded as checked-and-clean so nobody re-investigates them — <code>each()</code> nested in an object pattern, <code>each(each(…))</code>, <code>each()</code> inside <code>AND</code>; <code>regex()</code>, <code>stringStartsWith()</code>, <code>numberLikePattern</code>, <code>nonEmptyStringPattern</code>, <code>numericRange()</code> and <code>ensure()</code> used as patterns; typed function patterns such as <code>sanitize((input: number) =&gt; input)</code>; indexing an <code>each()</code> or <code>OBJECT()</code> result; reading an optional-only key.</p>
+      <p>Verified against the declarations emitted by <code>tsconfig.prod.esm.json</code> on TypeScript 5.0.4, the version in <code>devDependencies</code>.</p>
+    </div>
+  </article>
+
+  <article class="finding" id="sa-32">
+    <div class="f-head"><span class="f-id">SA-32</span><span class="sev sev-high">High</span>
+      <h3 class="f-title">Five <code>sanitize()</code> calls in one file crash the TypeScript compiler</h3></div>
+    <div class="f-body">
+      <p>Found while writing the test coverage. Type-checking this file does not fail — it aborts:</p>
+<pre><code>const shapes: [string, () =&gt; unknown][] = [
+  ["happy path",    () =&gt; sanitize({ a: String })(body)],
+  ["union",         () =&gt; sanitize(new OR({ a: String, b: Number }, { a: String }))(body)],
+  ["AND after NOT", () =&gt; sanitize(new AND(new NOT({ z: Number }), { a: String }))(body)],
+  ["soft OBJECT",   () =&gt; sanitize(new OBJECT(Number, true))(body)],
+  ["nested",        () =&gt; sanitize({ n: { a: String } })(body)],
+]
+
+<span class="out">// RangeError: Maximum call stack size exceeded</span>
+<span class="c">// no error code, no file, no line — just a compiler stack trace</span></code></pre>
+      <p>No single pattern is the culprit; each compiles fine alone. <code>Sanitized</code>, <code>ParseIfCombinator</code> and <code>DeepOBJECT</code> are simply expensive enough that inference across a handful of distinct call sites exhausts tsc's stack. Bisecting the audit test file put the threshold at six un-erased call sites; the trimmed fixture reproduces with five.</p>
+      <p>Five sanitizers is an ordinary amount for one route file, so this is reachable by writing normal code, and it is close to undiagnosable from a consumer's seat — there is nothing to search for. The only workaround is to erase the sanitizer's return type, which is the same <code>as any</code> that SA-23 already forces. Ranked High for that reason: unlike the rest of SA-23 it is not an ergonomic complaint, it is a hard build failure.</p>
+      <dl class="meta">
+        <div><dt>Reach</dt><dd>Any TypeScript consumer with ~5 sanitizers in one module</dd></div>
+        <div><dt>Repro</dt><dd><code>test/src/typeCrash.fixture.ts</code> on the branch</dd></div>
+      </dl>
+    </div>
+  </article>
+
+  <h2>Low</h2>
+  <p class="sec-note">Real, reproduced, and mostly fail-closed — worth a line in the changelog rather than a release.</p>
+
+  <article class="finding" id="sa-15">
+    <div class="f-head"><span class="f-id">SA-15</span><span class="sev sev-low">Low</span>
+      <h3 class="f-title">A self-referential pattern blows the stack at compile time</h3></div>
+    <div class="f-body">
+      <p><code>knownPatternObjects.set(pattern, against)</code> runs <em>after</em> the recursive descent instead of before, so the cache that exists to handle pattern cycles never gets the chance to.</p>
+<pre><code>const p = { name: String }; p.self = p
+sanitize(p)                                   <span class="out">// RangeError: Maximum call stack size exceeded</span>
+
+const a = { name: String }, b = { a }; a.b = b
+sanitize(a)                                   <span class="out">// RangeError (mutual recursion)</span></code></pre>
+      <p>Registering the placeholder before recursing is the same one-line reordering as SA-01, in the pattern cache rather than the input cache.</p>
+    </div>
+  </article>
+
+  <article class="finding" id="sa-17">
+    <div class="f-head"><span class="f-id">SA-17</span><span class="sev sev-low">Low</span>
+      <h3 class="f-title"><code>regex()</code> writes to the <code>RegExp</code> the caller handed it</h3></div>
+    <div class="f-body">
+      <p><code>regex.lastIndex = 0</code> mutates the caller's object, and <code>test()</code> then advances it again on a global regex. A regex shared with any other part of the application has its iteration state clobbered by an incoming request.</p>
+<pre><code>const shared = /a/g; shared.lastIndex = 7
+sanitize(regex(shared))("aaaa")
+shared.lastIndex   <span class="out">// 1   ← the other consumer's cursor is gone</span></code></pre>
+      <p>The warning that fires for <code>g</code>/<code>y</code> flags names the risk but does not prevent it; cloning the regex would.</p>
+    </div>
+  </article>
+
+  <article class="finding" id="sa-18">
+    <div class="f-head"><span class="f-id">SA-18</span><span class="sev sev-low">Low</span>
+      <h3 class="f-title">Helpers raise <code>TypeError</code> where a validation error belongs</h3></div>
+    <div class="f-body">
+<pre><code>sanitize({ p: stringStartsWith("a") })({ p: 5 })
+<span class="out">// TypeError: Regarding "p": input.startsWith is not a function</span>
+sanitize({ p: stringStartsWith("a") })({ p: null })
+<span class="out">// TypeError: Cannot read properties of null</span></code></pre>
+      <p>Fail-closed, but an application that maps validation errors to 400 and everything else to 500 returns the wrong status and logs the wrong severity for an ordinary bad request. Inside an <code>OR</code> it is simply swallowed (see SA-29).</p>
+    </div>
+  </article>
+
+  <article class="finding" id="sa-19">
+    <div class="f-head"><span class="f-id">SA-19</span><span class="sev sev-low">Low</span>
+      <h3 class="f-title">Cross-realm values and thenables are rejected</h3></div>
+    <div class="f-body">
+      <p>The plain-object test compares <code>getPrototypeOf(input).constructor === Object</code>, <code>each</code> uses <code>instanceof Array</code>, and <code>AWAITED</code> uses <code>instanceof Promise</code> — all realm-bound.</p>
+<pre><code>const foreign = vm.runInContext('({a:"b"})', ctx)
+sanitize({ a: String })(foreign)          <span class="out">// Error: Input is not a plain object</span>
+sanitize(each(String))(vm.runInContext('["a"]', ctx))
+<span class="out">// Error: Input is not an instance of Array</span>
+sanitize(new AWAITED(String))({ then(r) { r("hi") } })
+<span class="out">// Error: Input is not an instance of Promise</span></code></pre>
+      <p>Matters for <code>vm</code> sandboxes, iframes (there is a web build), and any library returning a non-native thenable. <code>Array.isArray</code> and a duck-typed <code>then</code> check are the realm-safe equivalents.</p>
+      <p class="sec-note" style="margin-top:.9rem">Worth recording alongside: the plain-object test is a <em>constructor identity</em> check, not a prototype identity check, so <code>Object.create({ constructor: Object, isAdmin: true })</code> passes it — and <code>OBJECT</code>'s <code>for…in</code> then copies the inherited keys into the output. Object patterns are unaffected (their <code>hasOwn</code> guard holds). Not reachable from JSON, but it is the guard doing less than it appears to.</p>
+    </div>
+  </article>
+
+  <article class="finding" id="sa-21">
+    <div class="f-head"><span class="f-id">SA-21</span><span class="sev sev-low">Low</span>
+      <h3 class="f-title"><code>AND</code> is a pipeline, documented as an intersection</h3></div>
+    <div class="f-body">
+      <p>"Passes if all of them pass" reads as an intersection, but each stage receives the previous stage's <em>filtered</em> output — so an intersection of two object patterns can never succeed.</p>
+<pre><code>sanitize(new AND({ a: String }, { b: Number }))(JSON.parse('{"a":"x","b":1}'))
+<span class="out">// Error: Regarding "b": Input is not a number   ← b was stripped by stage 1</span></code></pre>
+      <p>The pipeline behaviour is the useful one and the examples rely on it; the prose is what needs to change.</p>
+    </div>
+  </article>
+
+  <article class="finding" id="sa-22">
+    <div class="f-head"><span class="f-id">SA-22</span><span class="sev sev-low">Low</span>
+      <h3 class="f-title"><code>{a, "a?"}</code> silently means "required <em>and</em> optional"</h3></div>
+    <div class="f-body">
+      <p>Both keys normalise to <code>a</code> but land in different maps, so both run and the optional one overwrites. A plausible merge conflict or copy-paste produces a field that must satisfy two patterns at once, reported as a confusing failure on a value that satisfies the one you can see.</p>
+<pre><code>sanitize({ a: String, "a?": Number })({ a: "str" })
+<span class="out">// Error: Regarding "a": Input is not a number</span></code></pre>
+      <p>Also worth documenting: a key of <code>"?"</code> resolves to the optional empty-string key <code>""</code>.</p>
+    </div>
+  </article>
+
+  <article class="finding" id="sa-24">
+    <div class="f-head"><span class="f-id">SA-24</span><span class="sev sev-low">Low</span>
+      <h3 class="f-title">No README combinator example runs as written</h3></div>
+    <div class="f-body">
+      <p>Every example calls the combinators as functions, but they are classes:</p>
+<pre><code>OR(Number, String)
+<span class="out">// TypeError: Class constructor OR cannot be invoked without 'new'</span>
+
+const { sanitize } = require("sanitize-against")
+<span class="out">// undefined — the CJS build exports `default`, not `sanitize`</span></code></pre>
+      <p>Either add function wrappers and a named <code>sanitize</code> export, or fix the docs. The first option is friendlier and keeps the README honest.</p>
+    </div>
+  </article>
+
+  <article class="finding" id="sa-25">
+    <div class="f-head"><span class="f-id">SA-25</span><span class="sev sev-low">Low</span>
+      <h3 class="f-title">A stray local file shipped inside the npm tarball</h3></div>
+    <div class="f-body">
+      <p><code>sanitize-against@1.8.0</code> contains seven files, and one of them is <code>sercurity analysis.txt</code> — your own notes for this audit. It is not in git, so <code>.npmignore</code> simply never learned about it.</p>
+<pre><code>npm pack sanitize-against@1.8.0 &amp;&amp; tar tzf sanitize-against-1.8.0.tgz
+<span class="c">package/app/dist/cjs/sanitizeAgainst.js
+package/app/dist/esm/sanitizeAgainst.mjs
+package/app/dist/{cjs,esm}/sanitizeAgainst.d.ts
+package/package.json
+package/README.md</span>
+<span class="out">package/sercurity analysis.txt          ← not in the repository</span></code></pre>
+      <p>Nothing sensitive this time. The structural point is that <code>.npmignore</code> is deny-by-omission: anything you leave in the working directory ships. A <code>"files"</code> allowlist in <code>package.json</code> inverts that, and <code>npm publish --dry-run</code> shows the manifest before it goes out.</p>
+    </div>
+  </article>
+
+  <h2>Near misses</h2>
+  <p class="sec-note">Not exploitable as the code stands — I tried. Each is one plausible patch away from becoming one of the findings above.</p>
+
+  <article class="finding" id="sa-26">
+    <div class="f-head"><span class="f-id">SA-26</span><span class="sev sev-note">Near miss</span>
+      <h3 class="f-title">Async cache state is nulled rather than restored</h3></div>
+    <div class="f-body">
+      <p><code>AWAITED.matches</code> saves <code>knownInputObjects</code>, restores it inside the <code>then</code>, then assigns <code>null</code> instead of the value it saved. <code>OR</code>'s awaited path does not restore at all when every branch fails.</p>
+      <p>I could not break it: 400 interleaved <code>AWAITED</code> sanitizations, 300 nested-<code>AWAITED</code> jobs, and 600 mixed jobs with rejections and shared object identities produced zero mismatches and zero spurious errors. Every callback reassigns the global before reading it, and the microtask model prevents interleaving inside the synchronous window that matters.</p>
+      <p>It survives on a coincidence of scheduling. A module-level mutable holding per-call state is the shape that breaks the moment anything reads it on a path that does not write it first — which is what a new combinator, or a <code>for await</code> loop, would plausibly add.</p>
+    </div>
+  </article>
+
+  <article class="finding" id="sa-27">
+    <div class="f-head"><span class="f-id">SA-27</span><span class="sev sev-note">Near miss</span>
+      <h3 class="f-title">The poisoning guard depends on the very inheritance it guards against</h3></div>
+    <div class="f-body">
+      <p><code>OBJECT</code>'s <code>out[key] !== undefined</code> only catches <code>__proto__</code>, <code>constructor</code> and friends because <code>out</code> is <code>{}</code> and inherits them. Hardening it to <code>Object.create(null)</code> — the obvious, correct-looking change, and the one the object-pattern branch already makes — silently removes the guard.</p>
+      <p>The two mechanisms are load-bearing for each other in a way nothing in the code says out loud. Whoever makes that edit will have the tests pass (SA-10's silent key dropping disappears, which looks like a fix) while re-opening SA-04 for the default key pattern.</p>
+      <p>An explicit key denylist, or building on a null-prototype object and rejecting dangerous keys by name, removes the coupling.</p>
+    </div>
+  </article>
+
+  <article class="finding" id="sa-28">
+    <div class="f-head"><span class="f-id">SA-28</span><span class="sev sev-note">Near miss</span>
+      <h3 class="f-title">Every property is read twice</h3></div>
+    <div class="f-body">
+      <p><code>input[key] === undefined || Object.hasOwn(input, key) ? input[key] : undefined</code> evaluates <code>input[key]</code> on both sides.</p>
+<pre><code>let n = 0
+const inp = { get a() { return n++ === 0 ? "safe" : "EVIL" } }
+sanitize({ a: String })(inp)   <span class="out">// { a: "EVIL" }  — the second read is what is stored</span></code></pre>
+      <p>Currently benign, because the stored value is the validated one. It becomes a genuine time-of-check/time-of-use bug the moment anyone refactors it into a variable used for the check and re-reads for the value, or the reverse — and the natural "let's not read twice" cleanup can land on either side. Getters with side effects also run twice today.</p>
+    </div>
+  </article>
+
+  <article class="finding" id="sa-29">
+    <div class="f-head"><span class="f-id">SA-29</span><span class="sev sev-note">Near miss</span>
+      <h3 class="f-title"><code>catch {}</code> swallows programming errors, not just failures</h3></div>
+    <div class="f-body">
+      <p>This is SA-02's root cause stated as a design property. <code>OR</code>, <code>NOT</code>, <code>matches()</code> and soft <code>OBJECT</code> treat <code>RangeError</code>, <code>TypeError</code> and any future internal bug as "did not match".</p>
+      <p>Beyond the exploit, it means every bug in a validator is invisible: a typo in a custom pattern makes the branch quietly not match rather than surfacing. A dedicated <code>ValidationError</code> class, with anything else rethrown, would close SA-02 and turn a whole category of silent misbehaviour into loud failures.</p>
+    </div>
+  </article>
+
+  <article class="finding" id="sa-30">
+    <div class="f-head"><span class="f-id">SA-30</span><span class="sev sev-note">Near miss</span>
+      <h3 class="f-title">Attacker code runs while formatting error messages</h3></div>
+    <div class="f-body">
+      <p><code>CONST</code> interpolates the input into its message, which invokes an attacker-controlled <code>toString</code> on the failure path:</p>
+<pre><code>sanitize(new CONST("user"))({ toString() { throw new Error("boom from toString") } })
+<span class="out">// Error: boom from toString   ← attacker chooses the error the caller sees</span>
+sanitize(new CONST("user"))("&lt;script&gt;alert(1)&lt;/script&gt;")
+<span class="out">// "Expected user, got &lt;script&gt;alert(1)&lt;/script&gt;"</span></code></pre>
+      <p>Two latent edges: raw input reaching logs or a response body (log injection, reflected content), and error-path code running attacker-supplied functions. Both are contained today because the throw still propagates.</p>
+    </div>
+  </article>
+
+  <article class="finding" id="sa-31">
+    <div class="f-head"><span class="f-id">SA-31</span><span class="sev sev-note">Near miss</span>
+      <h3 class="f-title">The output prototype is repaired last, not set first</h3></div>
+    <div class="f-body">
+      <p>Output objects are built as <code>Object.create(null)</code> and given <code>Object.prototype</code> by a <code>setPrototypeOf</code> on the final line. Every early exit therefore yields a null-prototype object — which is how SA-01's residue escapes with no <code>toString</code>.</p>
+      <p>The null prototype during construction is also load-bearing for SA-06: it is why a <code>__proto__</code> pattern key becomes a real own property instead of a prototype assignment. Constructing with <code>Object.create(Object.prototype)</code> and explicitly handling dangerous keys would make the invariant hold at every exit rather than only the successful one.</p>
+    </div>
+  </article>
+
+  <h2>What I could not break</h2>
+  <div class="f-body" style="max-width:46rem">
+    <p>Negative results, so they do not get re-investigated later:</p>
+    <ul class="tight">
+      <li><strong>No global pollution during sanitization itself.</strong> Key-transform writes, colliding transformed keys, deep-mode nesting, a key pattern returning <code>__proto__</code> for every key, <code>constructor</code>-named keys — all only re-point the local output's prototype. <code>Object.prototype</code> gained no own property in any variant. Every global pollution finding here needs a downstream merge.</li>
+      <li><strong>The <code>hasOwn</code> read guard holds.</strong> Inherited properties on the input never reach the output through an object pattern, including when the input's prototype is spoofed to pass the plain-object check.</li>
+      <li><strong>No async cross-call contamination.</strong> See SA-26 — 1,300 concurrent and nested jobs, zero mismatches.</li>
+      <li><strong>No super-linear complexity.</strong> <code>OBJECT</code> over 100,000 keys: 45 ms. <code>each(String)</code> over 400,000 elements: 37 ms. Nested <code>OR</code>/<code>AND</code> to depth 16: flat. Error-message rebuilding at pattern depth 1,600: 2.6 ms. The only resource issue is the stack overflow, and it matters as the fail-open in SA-02 rather than as a denial of service.</li>
+    </ul>
+  </div>
+
+  <h2>If you fix nothing else</h2>
+  <div class="f-body" style="max-width:46rem">
+    <p>Three changes retire most of this list:</p>
+    <ul class="tight">
+      <li><strong>Populate before caching</strong>, or key the cache on <code>(pattern, input)</code> rather than <code>input</code>. Retires SA-01, SA-05, SA-20, and the null-prototype leak in SA-31; the same reordering in <code>knownPatternObjects</code> retires SA-15.</li>
+      <li><strong>Throw a distinguishable <code>ValidationError</code></strong> and rethrow everything else from every <code>catch</code>. Retires SA-02, fixes SA-08 on the way, and turns SA-29 and SA-18 into loud failures.</li>
+      <li><strong>Say plainly which leaves are pass-through</strong> — <code>any</code>, <code>Object</code>, <code>unknown</code>, <code>NOT</code>, <code>someEnsure</code> — and that the <code>__proto__</code> guarantee only covers values a concrete pattern rebuilds. Or strip <code>__proto__</code> from returned objects on the way out, which would make the README's claim unconditional.</li>
+    </ul>
+  </div>
+
+  <footer>
+    <p>All findings reproduced against the published <code>sanitize-against@1.8.0</code> build (<code>app/dist/esm/sanitizeAgainst.mjs</code>) on Node 22.22.2, not only against the TypeScript source. The repository's own suite passed 115/115 throughout, so none of this was caught before. The deep-recursion findings need <code>node --stack-size</code> left at its default to reproduce the stated thresholds.</p>
+    <p>Coverage now lives on the <code>test/audit-findings</code> branch: <code>test/src/audit.ts</code> (88 tests), <code>test/src/typeGaps.ts</code> (SA-23) and <code>test/src/typeCrash.fixture.ts</code> (SA-32). SA-03 and SA-23 above carry corrections that writing those tests produced — the mechanism is built to fail when a finding turns out to be wrong, and it did.</p>
+  </footer>
+
+</div>
+
+</body></html>

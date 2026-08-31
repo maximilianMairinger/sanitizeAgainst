@@ -4,11 +4,11 @@ on: push
 
 jobs:
 
-  CI: 
+  CI:
     name: CI
     runs-on: ubuntu-latest
-    
-    steps: 
+
+    steps:
     - name: Checkout
       uses: actions/checkout@master
     - name: Setup Node.js
@@ -19,8 +19,20 @@ jobs:
       run: |
         npm i
 
+    # The library's own suite. This one gates the build: if it goes red,
+    # something regressed.
     - name: Test
       run: |
-        npm test --if-present
+        npm run test:lib --if-present
+      env:
+        CI: true
+
+    # The audit findings. Expected red until they are fixed — each failure is an
+    # open finding, and the count going down is the progress bar. Deliberately
+    # non-gating, so it cannot mask a regression in the suite above.
+    - name: Audit findings (expected red until fixed)
+      run: |
+        npx jest audit
+      continue-on-error: true
       env:
         CI: true
