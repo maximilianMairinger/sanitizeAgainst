@@ -38,20 +38,51 @@ type Inp = InpPrim | InpObj
 const fromInstanceSym = Symbol("fromInstance")
 
 abstract class Matcher {
-  protected init?(): void
-  protected abstract matches(input: unknown): unknown
+  protected init?(compile: CompilePattern): void
+  protected abstract matches(input: unknown, context: TraversalContext): unknown
   protected abstract [fromInstanceSym]: string
 }
 
 type PossibleKeyPatterns = Pattern & (((key: string) => string) | Combinator | CONST<any> | typeof String | AND<typeof String, typeof Number>)
+
+type ErrorMsg = string | ((a: any) => string)
+// pattern node + input object => output object
+type TraversalContext = WeakMap<object, WeakMap<object, object>>
+type CompiledValidator = (input: unknown, context: TraversalContext, errorMsg?: ErrorMsg) => unknown
+type CompilePattern = (pattern: Pattern, globalErrorMsg?: ErrorMsg) => CompiledValidator
+
+function cacheFor(context: TraversalContext, patternNode: object) {
+  let cache = context.get(patternNode)
+  if (cache === undefined) {
+    cache = new WeakMap()
+    context.set(patternNode, cache)
+  }
+  return cache
+}
+
+function withCachedOutput<Output extends object>(context: TraversalContext, patternNode: object, input: object, createOutput: () => Output, populate: (output: Output) => void): Output {
+  const cache = cacheFor(context, patternNode)
+  if (cache.has(input)) return cache.get(input) as Output
+
+  const output = createOutput()
+  cache.set(input, output)
+  try {
+    populate(output)
+    return output
+  }
+  catch (e) {
+    cache.delete(input)
+    throw e
+  }
+}
 
 
 
 
 export class OBJECT<ValuePattern extends Pattern, KeyPattern extends PossibleKeyPatterns, Deep extends boolean = false> extends Matcher {
   protected get [fromInstanceSym]() {return "OBJECT"}
-  private saniValue: Function
-  private saniKey: Function
+  private saniValue: CompiledValidator
+  private saniKey: CompiledValidator
   private soft: boolean
   private keyPattern: KeyPattern
   private deep: boolean
@@ -71,53 +102,44 @@ export class OBJECT<ValuePattern extends Pattern, KeyPattern extends PossibleKey
     }
     if (this.deep) this.valuePattern = new OR(this.valuePattern, this) as any
   }
-  protected init() {
+  protected init(compile: CompilePattern) {
     this.init = () => {}
-    this.saniKey = sanitizeRec(this.keyPattern)
-    this.saniValue = sanitizeRec(this.valuePattern)
+    this.saniKey = compile(this.keyPattern)
+    this.saniValue = compile(this.valuePattern)
   }
-  protected matches(input: unknown): unknown {
+  protected matches(input: unknown, context: TraversalContext): unknown {
     if (!(typeof input === "object" && input !== null && (Object.getPrototypeOf(input) === null || Object.getPrototypeOf(input).constructor === Object))) throw new Error("Input is not a plain object")
-    if (knownInputObjects.has(input as any)) return knownInputObjects.get(input as any)
-    const out = {}
-    knownInputObjects.set(input as any, out)
-    for (const key in input as any) {
-      if (out[key] !== undefined) continue // prototype poisoning protection
-      if (!this.soft) {
-        out[this.saniKey(key)] = this.saniValue(input[key])
+    return withCachedOutput(context, this, input as object, () => ({}), (out) => {
+      for (const key in input as any) {
+        if (out[key] !== undefined) continue // prototype poisoning protection
+          try {
+            // todo we should have an extra check here, to make sure that we dont do __proto__ or something
+            out[this.saniKey(key, context) as any] = this.saniValue(input[key], context)
+          }
+          catch (e) {
+            if (!this.soft) throw e
+          }
       }
-      else {
-        try {
-          out[this.saniKey(key)] = this.saniValue(input[key])
-        }
-        catch (e) {}
-      }
-    }
-    return out
+    })
   }
 }
 
-const isPromiseSani = sanitizeRec(Promise)
 export class AWAITED<Pat extends Pattern> extends Matcher {
   protected get [fromInstanceSym]() {return "AWAITED"}
-  public sani: Function
+  public sani: CompiledValidator
   constructor(private _pattern: Pat) {
     super()
   }
-  protected init() {
-    this.sani = sanitizeRec(this.pattern)
+  protected init(compile: CompilePattern) {
+    this.sani = compile(this.pattern)
   }
   private get pattern(): Pat {
     return this._pattern instanceof AWAITED ? this._pattern.pattern : this._pattern
   }
-  protected matches(input: unknown): unknown {
-    isPromiseSani(input as any)
-    const myKnownInputObjects = knownInputObjects
+  protected matches(input: unknown, context: TraversalContext): unknown {
+    if (!(input instanceof Promise)) throw new Error("Input is not an instance of Promise")
     return (input as Promise<any>).then((input) => {
-      knownInputObjects = myKnownInputObjects
-      const r = this.sani(input)
-      knownInputObjects = null
-      return r
+      return this.sani(input, context)
     })
   }
 }
@@ -126,7 +148,7 @@ export class AWAITED<Pat extends Pattern> extends Matcher {
 export class CONST<MyPattern extends string | number | boolean> extends Matcher {
   protected get [fromInstanceSym]() {return "CONST"}
   constructor(private constVal: MyPattern) {super()}
-  protected matches(input: unknown): unknown {
+  protected matches(input: unknown, _context: TraversalContext): unknown {
     if (input !== this.constVal) throw `Expected ${this.constVal}, got ${input}`
     return input
   }
@@ -137,9 +159,9 @@ export class CONST<MyPattern extends string | number | boolean> extends Matcher 
 
 abstract class Combinator extends Matcher {
   protected patterns: Pattern[]
-  protected sanis: Function[] // this gets generated in the recSanitize function
-  protected init() {
-    this.sanis = this.patterns.map((a) => sanitizeRec(a))
+  protected sanis: CompiledValidator[]
+  protected init(compile: CompilePattern) {
+    this.sanis = this.patterns.map((a) => compile(a))
   }
 }
 
@@ -195,10 +217,10 @@ export class AND<A1 extends Pattern, A2 extends Pattern = any, A3 extends Patter
   // constructor(...ar: AllPats & ([(never | Pattern) & A1, ((a: A1) => any)])) {
     super(...ar)
   }
-  protected matches(input: unknown) {
+  protected matches(input: unknown, context: TraversalContext) {
     let curRet = input
     for (const a of this.sanis) {
-      curRet = a(curRet)
+      curRet = a(curRet, context)
     }
     return curRet as any
   }
@@ -213,31 +235,27 @@ export class OR<Arg extends Pattern[], Pat extends Arg[number] = Arg[number]> ex
   
   
   private awaitedSanis: AWAITED<any>[]
-  private nonAwaitedSanis: Function[]
+  private nonAwaitedSanis: CompiledValidator[]
   constructor(...ar: Arg) {
     super(...ar)
   }
-  protected init() {
-    super.init()
+  protected init(compile: CompilePattern) {
+    super.init(compile)
     this.awaitedSanis = this.sanis.filter((a) => a[fromInstanceSym] !== undefined && a[fromInstanceSym][fromInstanceSym] === "AWAITED").map((a) => a[fromInstanceSym])
     this.nonAwaitedSanis = this.sanis.filter((a) => !(a[fromInstanceSym] !== undefined && a[fromInstanceSym][fromInstanceSym] === "AWAITED"))
   }
-  protected matches(input: unknown) {
+  protected matches(input: unknown, context: TraversalContext) {
     for (const a of this.nonAwaitedSanis) {
       try {
-        const r = a(input)
+        const r = a(input, context)
         return this.awaitedSanis.length === 0 ? r : Promise.resolve(r)
       } catch (e) {}
     }
     if (this.awaitedSanis.length !== 0 && input instanceof Promise) {
-      const myKnownInputObjects = knownInputObjects
       return input.then((input) => {
-        knownInputObjects = myKnownInputObjects
         for (const a of this.awaitedSanis) {
           try {
-            const r = a.sani(input)
-            knownInputObjects = null
-            return r
+            return a.sani(input, context)
           }
           catch(e) {}
         }
@@ -262,10 +280,10 @@ export class NOT<FunctionHint extends ((a: unknown) => unknown), Arg extends Pat
     this.patterns = [ar]
     // this.ar = sanitize(ar)
   }
-  protected matches(input: unknown) {
+  protected matches(input: unknown, context: TraversalContext) {
     let throws: boolean
     try {
-      this.sanis[0](input)
+      this.sanis[0](input, context)
       throws = false
     } catch (e) {
       throws = true
@@ -301,123 +319,109 @@ function againstPrimitive(type: string) {
   return ensure(input => typeof input === type, `Input is not a ${type}`)
 }
 
-let knownPatternObjects: WeakMap<object, (input: unknown) => unknown>
-let knownInputObjects: WeakMap<object, object>
 function sanitize<Pat extends Pattern>(pattern: Pat, errorMsg?: string | ((a: any) => string)) {
-  // restore instead of nulling, so that a nested sanitize (e.g. via each) does not tear down the state of the enclosing one
-  const outerKnownPatternObjects = knownPatternObjects
-  knownPatternObjects = new WeakMap()
-  const out = sanitizeRec(pattern, errorMsg)
-  knownPatternObjects = outerKnownPatternObjects
-  return (input: Sanitized<Pat, false>, errorMsg?: string | ((a: any) => string)): Sanitized<Pat, true> => {
-    const outerKnownInputObjects = knownInputObjects
-    knownInputObjects = new WeakMap()
-    try {
-      return out(input, errorMsg) as Sanitized<Pat, true>
+  const knownPatternObjects = new WeakMap<object, CompiledValidator>()
+
+  const compile: CompilePattern = (pattern, globalErrorMsg) => {
+    let against: CompiledValidator
+    const type = typeof pattern
+
+    if (type === "string") against = againstPrimitiveDefault("string", pattern)
+    else if (type === "number") against = againstPrimitiveDefault("number", pattern)
+    else if (type === "boolean") against = againstPrimitiveDefault("boolean", pattern)
+    else if (pattern === String) against = againstPrimitive("string")
+    else if (pattern === Number) against = againstPrimitive("number")
+    else if (pattern === Boolean) against = againstPrimitive("boolean")
+    else if (pattern === Function) against = againstPrimitive("function")
+    else if (pattern instanceof Matcher) {
+      if ((pattern as any).init) (pattern as any).init(compile)
+      against = (pattern as any).matches.bind(pattern)
+      against[fromInstanceSym] = pattern
     }
-    finally {
-      knownInputObjects = outerKnownInputObjects
+    else if (pattern === Object) against = (input) => {
+      if (input instanceof Object || (typeof input === "object" && input !== null)) return input
+      else throw new Error('Input is not instanceof object')
     }
-  }
-}
-
-
-function sanitizeRec<Pat extends Pattern>(pattern: Pat, globalErrorMsg?: string | ((a: any) => string)) {
-  let against: (input: unknown) => unknown
-
-  const type = typeof pattern
-
-  if (type === "string") against = againstPrimitiveDefault("string", pattern)
-  else if (type === "number") against = againstPrimitiveDefault("number", pattern)
-  else if (type === "boolean") against = againstPrimitiveDefault("boolean", pattern)
-  else if (pattern === String) against = againstPrimitive("string")
-  else if (pattern === Number) against = againstPrimitive("number")
-  else if (pattern === Boolean) against = againstPrimitive("boolean")
-  else if (pattern === Function) against = againstPrimitive("function")
-  else if (pattern instanceof Matcher) {
-    if ((pattern as any).init) (pattern as any).init()
-    against = (pattern as any).matches.bind(pattern)
-    against[fromInstanceSym] = pattern
-  }
-  else if (pattern === Object) against = (input) => {
-    if (input instanceof Object || (typeof input === "object" && input !== null)) return input
-    else throw new Error('Input is not instanceof object')
-  }
-  // It is important that this check is after all the constructor checks like if (input === Boolean)
-  else if (pattern instanceof Function) {
-    if (isConstructor(pattern)) against = (input) => {
-      if (!(input instanceof pattern)) throw new Error(`Input is not an instance of ${pattern.name}`)
-      return input
+    // It is important that this check is after all the constructor checks like if (input === Boolean)
+    else if (pattern instanceof Function) {
+      if (isConstructor(pattern)) against = (input) => {
+        if (!(input instanceof pattern)) throw new Error(`Input is not an instance of ${pattern.name}`)
+        return input
+      }
+      else against = pattern as any
     }
-    else against = pattern as any
-  }
-  else if (typeof pattern === "object" && pattern !== null) {
-    if (knownPatternObjects.has(pattern)) return knownPatternObjects.get(pattern) 
+    else if (typeof pattern === "object" && pattern !== null) {
+      const knownPattern = knownPatternObjects.get(pattern)
+      if (knownPattern !== undefined) return knownPattern
 
-    const requiredPattern = new Map<any, any>()
-    const optionalPattern = new Map<any, any>()
-    for (const key in pattern) {
-      const numberOfQuestionmarks = getNumberOfQuestionmarksAtTheEndOfString(key);
-      let questionMarksToRemove = -Math.floor(numberOfQuestionmarks/2);
-      const isEvan = numberOfQuestionmarks % 2 === 0;
-      if (!isEvan) questionMarksToRemove--;
-      const keyWithoutQuestionmarks = questionMarksToRemove !== 0 ? key.slice(0, questionMarksToRemove) : key;
-      
-      (isEvan ? requiredPattern : optionalPattern).set(keyWithoutQuestionmarks, sanitizeRec(pattern[key] as any))
-    }
+      const requiredPattern = new Map<any, CompiledValidator>()
+      const optionalPattern = new Map<any, CompiledValidator>()
+      for (const key in pattern) {
+        const numberOfQuestionmarks = getNumberOfQuestionmarksAtTheEndOfString(key)
+        let questionMarksToRemove = -Math.floor(numberOfQuestionmarks/2)
+        const isEvan = numberOfQuestionmarks % 2 === 0
+        if (!isEvan) questionMarksToRemove--
+        const keyWithoutQuestionmarks = questionMarksToRemove !== 0 ? key.slice(0, questionMarksToRemove) : key
 
-    against = (input) => {
-      if (input === null || input === undefined) input = {}
-      else if (typeof input !== "object" || !(Object.getPrototypeOf(input) === null || Object.getPrototypeOf(input).constructor === Object)) throw new Error('Input is not a plain object')
-      if (knownInputObjects.has(input as any)) return knownInputObjects.get(input as any)
-      const out = Object.create(null)
-      knownInputObjects.set(input as any, out)
-
-      for (const [key, nestedAgainst] of requiredPattern) {
-        const val = input[key] === undefined || Object.hasOwn(input as object, key) ? input[key] : undefined
-        try {
-          out[key] = nestedAgainst(val)
-        }
-        catch(e) {
-          e.message = `Regarding "${key}":\n${e.message}`
-          throw e
-        }
-        
+        const patternMap = isEvan ? requiredPattern : optionalPattern
+        patternMap.set(keyWithoutQuestionmarks, compile(pattern[key] as any))
       }
 
-      for (const [key, nestedAgainst] of optionalPattern) {
-        if (Object.hasOwn(input as object, key)) {
-          try {
-            out[key] = nestedAgainst(input[key])
+      against = (input, context) => {
+        if (input === null || input === undefined) input = {}
+        else if (typeof input !== "object" || !(Object.getPrototypeOf(input) === null || Object.getPrototypeOf(input).constructor === Object)) throw new Error('Input is not a plain object')
+
+        const inputObject = input as object
+        return withCachedOutput(context, pattern, inputObject, () => Object.create(null), (out) => {
+          for (const [key, nestedAgainst] of requiredPattern) {
+            const val = input[key] === undefined || Object.hasOwn(inputObject, key) ? input[key] : undefined
+            try {
+              out[key] = nestedAgainst(val, context)
+            }
+            catch(e) {
+              e.message = `Regarding "${key}":\n${e.message}`
+              throw e
+            }
           }
-          catch(e) {
-            e.message = `Regarding "${key}":\n${e.message}`
-            throw e
+
+          for (const [key, nestedAgainst] of optionalPattern) {
+            if (Object.hasOwn(inputObject, key)) {
+              try {
+                out[key] = nestedAgainst(input[key], context)
+              }
+              catch(e) {
+                e.message = `Regarding "${key}":\n${e.message}`
+                throw e
+              }
+            }
           }
-        }
+
+          // do this e.g. for equals functions. Some implementations (e.g. fast-equals) check constructor for equality
+          Object.setPrototypeOf(out, Object.prototype)
+        })
       }
-
-      // do this e.g. for equals functions. Some implementations (e.g. fast-equals) check constructor for equality
-      Object.setPrototypeOf(out, Object.prototype)
-      
-      return out
     }
 
-    knownPatternObjects.set(pattern, against)
+    const againstWrapper: CompiledValidator = (input, context, errorMsg = globalErrorMsg) => {
+      try {
+        return against(input, context)
+      }
+      catch(e) {
+        if (errorMsg !== undefined) e.message = `${errorMsg instanceof Function ? errorMsg(input) : errorMsg}\n\n${e.message}`
+        throw e
+      }
+    }
+    if (against[fromInstanceSym]) againstWrapper[fromInstanceSym] = against[fromInstanceSym]
+    if (typeof pattern === "object" && pattern !== null && !(pattern instanceof Matcher)) {
+      knownPatternObjects.set(pattern, againstWrapper)
+    }
+    return againstWrapper
   }
 
-  
-  const againstWrapper = (input: Sanitized<Pat, false>, errorMsg: string | ((a: any) => string) | undefined = globalErrorMsg): Sanitized<Pat, true> => {
-    try {
-      return against(input) as any
-    }
-    catch(e) {
-      if (errorMsg !== undefined) e.message = `${errorMsg instanceof Function ? errorMsg(input) : errorMsg}\n\n${e.message}`
-      throw e
-    }
+  const against = compile(pattern, errorMsg)
+  return (input: Sanitized<Pat, false>, errorMsg?: ErrorMsg): Sanitized<Pat, true> => {
+    return against(input, new WeakMap(), errorMsg) as Sanitized<Pat, true>
   }
-  if (against[fromInstanceSym]) againstWrapper[fromInstanceSym] = against[fromInstanceSym]
-  return againstWrapper
 }
 
 

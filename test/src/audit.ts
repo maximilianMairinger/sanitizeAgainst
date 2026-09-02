@@ -175,6 +175,13 @@ describe("audit findings", () => {
       )
       expect(Object.getPrototypeOf(out)).toBe(Object.prototype)
     })
+
+    test("SA-01i — a failed pattern node does not cache a partial result", () => {
+      const branch = { a: String, b: Number }
+      const against = build(new OR(branch, branch))
+
+      expect(() => against(JSON.parse('{"a":"x","b":"not a number"}'))).toThrow()
+    })
   })
 
 

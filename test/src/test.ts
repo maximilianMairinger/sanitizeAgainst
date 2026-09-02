@@ -1861,17 +1861,17 @@ describe("core", () => {
         .eq({a: {b: {c: "deep"}, other3: {z: "3"}}, other2: {z: "2"}})
     })
 
-    test("nested against does not break the enclosing shared reference tracking", () => {
+    test("nested against does not break pattern-aware shared reference tracking", () => {
       const inner = sani({a: String})
       const shared = {a: "x"}
       const out = sani({p: {a: String}, viaFn: (i) => inner(i), q: {a: String}})({p: shared, viaFn: {a: "y"}, q: shared})
 
       expect(out).eq({p: {a: "x"}, viaFn: {a: "y"}, q: {a: "x"}})
-      // the input had one object under both p and q, so the output must too
-      expect(out.p).toBe(out.q)
+      // p and q are different pattern nodes, so the shared input is validated independently.
+      expect(out.p).not.toBe(out.q)
     })
 
-    test("caught nested failure does not break the enclosing shared reference tracking", () => {
+    test("caught nested failure does not break pattern-aware shared reference tracking", () => {
       const strict = sani({a: String})
       const fallback = (i) => {
         try { return strict(i) }
@@ -1881,6 +1881,14 @@ describe("core", () => {
       const out = sani({p: {a: String}, viaFn: fallback, q: {a: String}})({p: shared, viaFn: {a: 999}, q: shared})
 
       expect(out).eq({p: {a: "keep"}, viaFn: {a: "fallback"}, q: {a: "keep"}})
+      expect(out.p).not.toBe(out.q)
+    })
+
+    test("the same pattern node preserves a shared input reference", () => {
+      const sharedPattern = {a: String}
+      const sharedInput = {a: "x"}
+      const out = sani({p: sharedPattern, q: sharedPattern})({p: sharedInput, q: sharedInput})
+
       expect(out.p).toBe(out.q)
     })
 
@@ -2387,4 +2395,3 @@ describe("core", () => {
   })
 
 })
-
