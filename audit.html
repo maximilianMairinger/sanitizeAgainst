@@ -234,10 +234,10 @@
       <div class="tally-item"><span class="tally-n" style="color:var(--medium)">10</span><span class="tally-l">Medium</span></div>
       <div class="tally-item"><span class="tally-n" style="color:var(--low)">8</span><span class="tally-l">Low</span></div>
       <div class="tally-item"><span class="tally-n" style="color:var(--note)">6</span><span class="tally-l">Near miss</span></div>
-      <div class="tally-item"><span class="tally-n">88</span><span class="tally-l">tests on branch</span></div>
+      <div class="tally-item"><span class="tally-n">93</span><span class="tally-l">runtime tests</span></div>
     </div>
     <div class="callout" style="margin-bottom:0">
-      <p><strong>Coverage exists.</strong> Branch <code>test/audit-findings</code> carries one test per finding — 88 in <code>test/src/audit.ts</code>, plus five compile-time gaps and the SA-32 fixture. Known-broken expectations are wrapped so CI stays green today and fails the moment a bug is fixed, which is the signal to promote the test. <code>AUDIT_STRICT=1 npx jest audit</code> shows the real red list: 74 failing, 14 passing. Nine gaps encode a policy choice rather than an unambiguous bug and are marked as such.</p>
+      <p><strong>Coverage exists.</strong> Active runtime findings live in <code>test/src/audit.ts</code>. The current catch-all error contract and the deferred fail-closed expectations for SA-02/SA-29 are grouped in <code>test/src/errorSemantics.ts</code>; the latter are skipped until a future major release. Compile-time coverage lives in <code>test/src/typeGaps.ts</code> and the SA-32 fixture.</p>
     </div>
   </header>
 
@@ -254,7 +254,7 @@
       <thead><tr><th>ID</th><th>Severity</th><th>Finding</th><th>Reachability</th></tr></thead>
       <tbody>
         <tr><td class="id"><a href="#sa-01">SA-01</a></td><td><span class="sev sev-critical">Critical</span></td><td>Aborted-branch residue is served as a valid result</td><td class="reach">Plain JSON</td></tr>
-        <tr><td class="id"><a href="#sa-02">SA-02</a></td><td><span class="sev sev-critical">Critical</span></td><td>Attacker steers <code>OR</code>/<code>NOT</code> by crashing a pattern</td><td class="reach">Plain JSON</td></tr>
+        <tr><td class="id"><a href="#sa-02">SA-02</a></td><td><span class="sev sev-critical">Critical</span></td><td>Attacker steers <code>OR</code>/<code>NOT</code> by crashing a pattern — deferred to next major</td><td class="reach">Plain JSON</td></tr>
         <tr><td class="id"><a href="#sa-03">SA-03</a></td><td><span class="sev sev-critical">Critical</span></td><td>Pass-through leaves preserve own <code>__proto__</code></td><td class="reach">Plain JSON</td></tr>
         <tr><td class="id"><a href="#sa-04">SA-04</a></td><td><span class="sev sev-high">High</span></td><td><code>OBJECT</code> key transform defeats the poisoning guard</td><td class="reach">Plain JSON + key pattern</td></tr>
         <tr><td class="id"><a href="#sa-05">SA-05</a></td><td><span class="sev sev-high">High</span></td><td>Result cache is keyed on input identity, never on pattern</td><td class="reach">Shared refs</td></tr>
@@ -281,7 +281,7 @@
         <tr><td class="id"><a href="#sa-26">SA-26</a></td><td><span class="sev sev-note">Near miss</span></td><td>Async cache state is nulled rather than restored</td><td class="reach">—</td></tr>
         <tr><td class="id"><a href="#sa-27">SA-27</a></td><td><span class="sev sev-note">Near miss</span></td><td>The poisoning guard depends on the bug it guards against</td><td class="reach">—</td></tr>
         <tr><td class="id"><a href="#sa-28">SA-28</a></td><td><span class="sev sev-note">Near miss</span></td><td>Every property is read twice</td><td class="reach">—</td></tr>
-        <tr><td class="id"><a href="#sa-29">SA-29</a></td><td><span class="sev sev-note">Near miss</span></td><td><code>catch {}</code> swallows programming errors, not just failures</td><td class="reach">—</td></tr>
+        <tr><td class="id"><a href="#sa-29">SA-29</a></td><td><span class="sev sev-note">Near miss</span></td><td><code>catch {}</code> swallows programming errors, not just failures — deferred to next major</td><td class="reach">—</td></tr>
         <tr><td class="id"><a href="#sa-30">SA-30</a></td><td><span class="sev sev-note">Near miss</span></td><td>Attacker code runs while formatting error messages</td><td class="reach">—</td></tr>
         <tr><td class="id"><a href="#sa-31">SA-31</a></td><td><span class="sev sev-note">Near miss</span></td><td>The output prototype is repaired last, not set first</td><td class="reach">—</td></tr>
         <tr><td class="id"><a href="#sa-32">SA-32</a></td><td><span class="sev sev-high">High</span></td><td>Five <code>sanitize()</code> calls in one file crash <code>tsc</code></td><td class="reach">Every TS consumer</td></tr>
@@ -342,6 +342,7 @@ sanitize(new OR(new AWAITED({ x: String }), new AWAITED({ y: Number })))(Promise
     <div class="f-head"><span class="f-id">SA-02</span><span class="sev sev-critical">Critical</span>
       <h3 class="f-title">The attacker picks which branch validates them, by crashing the others</h3></div>
     <div class="f-body">
+      <div class="callout"><p><strong>Status: accepted for 1.x; deferred to the next major.</strong> Existing function patterns use every thrown value as their validation-failure signal, so selectively rethrowing programming or resource errors would silently change public behavior. The current contract is pinned, while the desired fail-closed reproductions remain skipped in <code>test/src/errorSemantics.ts</code>.</p></div>
       <p>Failure is signalled by throwing, and the combinators catch every throwable — a <code>RangeError</code> from stack exhaustion is indistinguishable from "this pattern did not match". Since input nesting depth is attacker-controlled and recursive patterns recurse once per level, the attacker decides which patterns are allowed to run.</p>
       <p><code>NOT</code> becomes fail-open: an input the pattern genuinely matches is accepted, because the match crashed instead of completing.</p>
 <pre><code>const deep = n =&gt; '{"a":'.repeat(n) + '"L"' + '}'.repeat(n)
@@ -780,7 +781,7 @@ sanitize({ a: String })(inp)   <span class="out">// { a: "EVIL" }  — the secon
       <h3 class="f-title"><code>catch {}</code> swallows programming errors, not just failures</h3></div>
     <div class="f-body">
       <p>This is SA-02's root cause stated as a design property. <code>OR</code>, <code>NOT</code>, <code>matches()</code> and soft <code>OBJECT</code> treat <code>RangeError</code>, <code>TypeError</code> and any future internal bug as "did not match".</p>
-      <p>Beyond the exploit, it means every bug in a validator is invisible: a typo in a custom pattern makes the branch quietly not match rather than surfacing. A dedicated <code>ValidationError</code> class, with anything else rethrown, would close SA-02 and turn a whole category of silent misbehaviour into loud failures.</p>
+      <p><strong>Status: accepted for 1.x; deferred to the next major.</strong> A dedicated validation-failure type, with unexpected errors rethrown, would close SA-02 and expose silent validator bugs. It cannot be introduced compatibly while arbitrary throws from existing function patterns mean “did not match”, so the current behavior is documented and pinned in <code>test/src/errorSemantics.ts</code>.</p>
     </div>
   </article>
 
@@ -822,14 +823,14 @@ sanitize(new CONST("user"))("&lt;script&gt;alert(1)&lt;/script&gt;")
     <p>Three changes retire most of this list:</p>
     <ul class="tight">
       <li><strong>Populate before caching</strong>, or key the cache on <code>(pattern, input)</code> rather than <code>input</code>. Retires SA-01, SA-05, SA-20, and the null-prototype leak in SA-31; the same reordering in <code>knownPatternObjects</code> retires SA-15.</li>
-      <li><strong>Throw a distinguishable <code>ValidationError</code></strong> and rethrow everything else from every <code>catch</code>. Retires SA-02, fixes SA-08 on the way, and turns SA-29 and SA-18 into loud failures.</li>
+      <li><strong>In the next major, introduce a distinguishable validation-failure signal</strong> and rethrow everything else from every <code>catch</code>. This retires SA-02 and turns SA-29 into a loud failure, but is deliberately deferred because arbitrary throws are part of the current function-pattern contract.</li>
       <li><strong>Say plainly which leaves are pass-through</strong> — <code>any</code>, <code>Object</code>, <code>unknown</code>, <code>NOT</code>, <code>someEnsure</code> — and that the <code>__proto__</code> guarantee only covers values a concrete pattern rebuilds. Or strip <code>__proto__</code> from returned objects on the way out, which would make the README's claim unconditional.</li>
     </ul>
   </div>
 
   <footer>
     <p>All findings reproduced against the published <code>sanitize-against@1.8.0</code> build (<code>app/dist/esm/sanitizeAgainst.mjs</code>) on Node 22.22.2, not only against the TypeScript source. The repository's own suite passed 115/115 throughout, so none of this was caught before. The deep-recursion findings need <code>node --stack-size</code> left at its default to reproduce the stated thresholds.</p>
-    <p>Coverage now lives on the <code>test/audit-findings</code> branch: <code>test/src/audit.ts</code> (88 tests), <code>test/src/typeGaps.ts</code> (SA-23) and <code>test/src/typeCrash.fixture.ts</code> (SA-32). SA-03 and SA-23 above carry corrections that writing those tests produced — the mechanism is built to fail when a finding turns out to be wrong, and it did.</p>
+    <p>Runtime coverage is split between <code>test/src/audit.ts</code> and <code>test/src/errorSemantics.ts</code>, which holds both the retained compatibility contract and the skipped next-major expectations for SA-02/SA-29. Compile-time coverage lives in <code>test/src/typeGaps.ts</code> (SA-23) and <code>test/src/typeCrash.fixture.ts</code> (SA-32).</p>
   </footer>
 
 </div>

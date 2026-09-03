@@ -80,6 +80,8 @@ against(2) // throws
 against("litterally anything else") // "litterally anything else"
 ```
 
+> **Important error-semantics contract:** Every value thrown by a pattern is treated as a validation failure. Consequently, `OR`, `NOT`, `matches()` and soft `OBJECT` cannot distinguish an intentional rejection from a programming error or resource failure inside a pattern. Do not use those combinators as a fail-closed security boundary around patterns that perform fallible application or infrastructure work. Distinguishing validation failures from unexpected errors is deferred to a future major version because it would change which existing function-pattern errors propagate.
+
 While this is hardly an abstraction at all, it is the basis for all other patterns. The function can be used to implement any kind of validation. For example, you could use it to check if the input is a number and if it is in a certain range. To simplify the process of creating such constraints, there are predefined patterns, or rather values which are mapped to predefined functions. We will describe them in the next couple sections. But it is important to keep in mind the option to fall back to a function when the predefined patterns are not specific enough. In a later chapter we will introduce boolesch logic, which can be used to combine (predefined) patterns with custom ones.
 
 > Note: I use pattern, constraint and custom functions interchangeably.

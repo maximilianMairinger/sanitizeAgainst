@@ -7,8 +7,8 @@ import "./extend"
 
 
 /**
- * Audit findings — SA-01 … SA-31
- * ==============================
+ * Active audit findings
+ * =====================
  *
  * One test per finding from the security audit. Every test asserts the
  * behaviour we WANT, so the ones describing unfixed bugs FAIL. That is the
@@ -30,6 +30,10 @@ import "./extend"
  *
  * SA-23 (TypeScript output types) is compile-time only and lives in
  * test/src/typeGaps.ts. `npm run test:types` checks it.
+ *
+ * SA-02 and SA-29 are accepted for 1.x because changing the catch-all error
+ * contract would be breaking. Their compatibility and deferred fail-closed
+ * tests live together in test/src/errorSemantics.ts.
  */
 
 /* ------------------------------------------------------------------ helpers */
@@ -79,34 +83,6 @@ const cleaningUp = <T>(keys: string[], fn: () => T): T => {
   try { return fn() }
   finally { for (const k of keys) delete (Object.prototype as any)[k] }
 }
-
-const nest = (depth: number) => JSON.parse('{"a":'.repeat(depth) + '"leaf"' + "}".repeat(depth))
-
-/**
- * An input deep enough that a recursive pattern runs out of stack, or undefined
- * if this machine survives every probed depth. The threshold moves with the Node
- * version and platform, so it is probed once here rather than hardcoded, and the
- * two tests that need it are skipped outright when it cannot be established —
- * an untested finding must not report as a passing one.
- */
-const stackExhaustingInput: any = (() => {
-  const makePattern = () => new OBJECT(String, false, true)
-  for (const depth of [1500, 4000, 10000, 30000]) {
-    const input = nest(depth)
-    if (!attempt(() => build(makePattern())(input)).ok) return input
-  }
-  console.warn(
-    "SA-02a / SA-02b skipped: could not exhaust the stack at depth 30000 on this machine.\n" +
-    "The finding is not disproved — raise the probe, or re-run with a smaller --stack-size."
-  )
-  return undefined
-})()
-
-/** `test` normally; `test.skip` where the stack probe found nothing. */
-const testIfStackExhaustible = stackExhaustingInput === undefined ? test.skip : test
-
-
-
 
 describe("audit findings", () => {
 
@@ -181,49 +157,6 @@ describe("audit findings", () => {
       const against = build(new OR(branch, branch))
 
       expect(() => against(JSON.parse('{"a":"x","b":"not a number"}'))).toThrow()
-    })
-  })
-
-
-  /* =================================================================== *
-   * SA-02  The attacker picks which branch validates them               *
-   *                                                                     *
-   * Root cause: failure is signalled by throwing and OR / NOT /          *
-   * matches() / soft OBJECT use a bare `catch`. A RangeError from stack  *
-   * exhaustion is indistinguishable from "did not match", and input      *
-   * nesting depth is attacker-controlled.                               *
-   * =================================================================== */
-  describe("SA-02 exception-driven branch steering", () => {
-
-    testIfStackExhaustible("SA-02a — NOT rejects a deeply nested input its pattern matches", () => {
-      const makePattern = () => new OBJECT(String, false, true)
-      const shallow = JSON.parse('{"a":"leaf"}')
-
-      // sanity: the pattern matches the shallow form, so NOT must reject it
-      expect(() => build(new NOT(makePattern()))(shallow)).toThrow()
-
-      // the same shape, only deeper, must still be rejected
-      expect(() => build(new NOT(makePattern()))(stackExhaustingInput)).toThrow()
-    })
-
-    testIfStackExhaustible("SA-02b — OR does not fall through to a permissive member on a crash", () => {
-      const against = build(new OR(new OBJECT(new CONST("safe"), false, true), any))
-
-      // `any` must not become a laundering route for input the strict member
-      // could not finish checking.
-      expect(against(stackExhaustingInput)).not.toBe(stackExhaustingInput)
-    })
-
-    test("SA-02c — a throwing getter does not make NOT fail open", () => {
-      const input = { get role() { throw new Error("getter") } }
-      expect(() => build(new NOT({ role: String }))(input as any)).toThrow()
-    })
-
-    test("SA-02d — a programming error inside a pattern is not swallowed by OR", () => {
-      // Also SA-29. A TypeError from a buggy validator should surface, not
-      // silently demote the member to "did not match".
-      const buggyValidator = (_: unknown) => { throw new TypeError("bug in validator") }
-      expect(() => build(new OR(buggyValidator, String))("x")).toThrow(TypeError)
     })
   })
 

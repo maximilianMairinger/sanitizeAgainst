@@ -29,4 +29,5 @@ export default [
   // Audit findings. Named *.test.js so jest's default testMatch picks it up as
   // its own suite, runnable on its own with `npx jest audit`.
   bundle('test/src/audit.ts', 'test/dist/audit.test.js'),
+  bundle('test/src/errorSemantics.ts', 'test/dist/errorSemantics.test.js'),
 ]
